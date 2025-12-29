@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from 'react-router-dom';
 import { 
-  RefreshCw, Leaf, ArrowRight, LayoutDashboard, History, Gift, 
+  RefreshCw, Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
   LogOut, Plus, CheckCircle, XCircle, MapPin, Loader2, Search, 
-  Megaphone, Trash2, Zap, Smile, CircuitBoard,
-  Fish, CloudRain, ClipboardList, Users, Package, BarChart3, 
+  Megaphone, Trash2, PlusCircle, Zap, Smile, CircuitBoard,
+  Fish, CloudRain, ClipboardList, Users, ChevronDown, Package, BarChart3, 
   Ticket, Shirt, Utensils, Lock, Database, Smartphone, FileText, Coffee
 } from 'lucide-react';
 // IMPORT SUPABASE
