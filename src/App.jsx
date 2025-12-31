@@ -8,7 +8,8 @@ import {
   BarChart3, ChevronRight, ExternalLink, Calendar,
   Coffee, FileText, Database, Smartphone, Lock, 
   ShieldCheck, Key, TrendingUp, AlertCircle, Heart,
-  Moon, Sun, Globe, Truck, Package, Menu
+  Moon, Sun, Globe, Truck, Package, Menu, X, Eye, 
+  Image as ImageIcon, Upload, FlaskConical 
 } from 'lucide-react';
 // IMPORT SUPABASE
 import { supabase } from './supabaseClient';
@@ -53,10 +54,15 @@ const LANG = {
     fee: "Fee",
     bonus: "Bonus",
     aboutTitle: "Who We Are",
-    aboutDesc: "We provide seamless pickup services and recyclables drop-off points.",
-    cat1: "Pickup",
-    cat2: "Merch",
-    cat3: "Events"
+    aboutDesc: "We provide seamless pickup services and recyclables drop-off points across campus.",
+    cat1: "Pickup Service",
+    desc1: "We come to your doorstep to collect heavy recyclables.",
+    cat2: "Merchandise",
+    desc2: "Redeem points for exclusive eco-friendly products.",
+    cat3: "Programs",
+    desc3: "Join our community events and clean-up drives.",
+    cat4: "Green R&D",
+    desc4: "Developing soap from vegetable enzymes."
   },
   ms: {
     heroTitle: "EDUCYCLE",
@@ -96,10 +102,15 @@ const LANG = {
     fee: "Caj",
     bonus: "Bonus",
     aboutTitle: "Tentang Kami",
-    aboutDesc: "Servis kutipan dan pusat pengumpulan.",
-    cat1: "Kutipan",
-    cat2: "Produk",
-    cat3: "Program"
+    aboutDesc: "Servis kutipan dan pusat pengumpulan barangan kitar semula di seluruh kampus.",
+    cat1: "Servis Kutipan",
+    desc1: "Kami datang ke pintu anda untuk mengutip barang.",
+    cat2: "Cenderamata",
+    desc2: "Tebus mata ganjaran untuk barangan eksklusif.",
+    cat3: "Program Komuniti",
+    desc3: "Sertai acara gotong-royong dan bengkel kami.",
+    cat4: "R&D Hijau",
+    desc4: "Menghasilkan sabun daripada enzim sayuran."
   }
 };
 
@@ -111,8 +122,6 @@ const REWARDS_DATA = [
   { id: 'r4', name: "Straw Kit", cost: 800, icon: Leaf },
   { id: 'r5', name: "Movie Tix", cost: 1500, icon: Gift },
 ];
-
-const POINT_RATES = { 'Plastic': 10, 'Paper': 5, 'Tin': 15, 'E-Waste': 50 };
 
 // --- MAIN APP ---
 export default function App() {
@@ -157,6 +166,8 @@ export default function App() {
         html, body { overflow-x: hidden; background-color: ${isDark ? '#0f172a' : '#f8fafc'}; color: ${isDark ? '#f8fafc' : '#1e293b'}; }
         .animate-shake { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       <AppRoutes currentUser={currentUser} setCurrentUser={handleSetUser} {...globalProps} />
     </Router>
@@ -181,9 +192,9 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
         setDbEvents(evs.data);
     } else {
         setDbEvents([
-            { id: 1, title: "Tree Planting", date: "2024-02-01", loc: "Eco Park", participants: 89, img: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=800&auto=format&fit=crop" },
-            { id: 2, title: "E-Waste Fix", date: "2024-01-20", loc: "Main Hall", participants: 15, img: "https://images.unsplash.com/photo-1591485423070-4859c43910da?q=80&w=800&auto=format&fit=crop" },
-            { id: 3, title: "Gotong-Royong", date: "2024-01-15", loc: "College", participants: 42, img: "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop" }
+            { id: 1, title: "Tree Planting", date: "2024-02-01", loc: "Eco Park", participants: 89, zoom_enabled: true, img: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=800&auto=format&fit=crop" },
+            { id: 2, title: "E-Waste Fix", date: "2024-01-20", loc: "Main Hall", participants: 15, zoom_enabled: false, img: "https://images.unsplash.com/photo-1591485423070-4859c43910da?q=80&w=800&auto=format&fit=crop" },
+            { id: 3, title: "Gotong-Royong", date: "2024-01-15", loc: "College", participants: 42, zoom_enabled: true, img: "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop" }
         ]);
     }
     if (news.data && news.data.length > 0) {
@@ -210,7 +221,7 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
   );
 }
 
-// --- SMART TOGGLES (FIXED VISIBILITY) ---
+// --- SMART TOGGLES ---
 const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding = false }) => {
     if (isLanding) {
         return (
@@ -245,8 +256,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
        <header className="relative h-screen flex flex-col items-center justify-center text-center px-4">
          <div className="absolute inset-0 z-0"><img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nature"/><div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div></div>
          
-         {/* HEADER FULL WIDTH - KE HUJUNG KIRI DAN KANAN */}
-         <nav className="absolute top-0 w-full z-50 px-6 py-6 flex justify-between items-center">
+         <nav className="absolute top-0 w-full z-50 px-6 md:px-12 py-6 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-tight"><div className="bg-emerald-500 p-1.5 md:p-2 rounded-lg flex items-center justify-center"><BookOpen className="text-white w-4 h-4 md:w-6 md:h-6" /><Leaf className="text-emerald-900 w-3 h-3 md:w-4 md:h-4 -ml-1 md:-ml-2 mt-1" /></div> {t.heroTitle}</div>
             <div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} isLanding={true} /><button onClick={() => navigate('/login')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-bold text-xs md:text-sm hover:bg-white hover:text-emerald-900 transition-all">{t.access}</button></div>
          </nav>
@@ -258,12 +268,26 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
            <button onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })} className="mt-4 px-8 py-3 md:px-10 md:py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-lg shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-2 mx-auto">{t.explore} <ArrowRight /></button>
          </div>
        </header>
+       
        <section id="about-section" className={`py-16 md:py-20 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
-         <div className="max-w-7xl mx-auto px-6">
+         <div className="max-w-full mx-auto px-6">
             <div className="mb-10 max-w-2xl"><h2 className="text-3xl md:text-4xl font-black mb-4">{t.aboutTitle}</h2><p className={`text-base md:text-lg leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.aboutDesc}</p></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[{t: t.cat1, i: MapPin, c: "bg-emerald-500", img: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800"}, {t: t.cat2, i: Gift, c: "bg-orange-500", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=800"}, {t: t.cat3, i: Users, c: "bg-blue-500", img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800"}].map((item, idx) => (
-                    <div key={idx} className="h-[400px] rounded-3xl overflow-hidden relative group cursor-pointer shadow-xl"><img src={item.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Card"/><div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-8 flex flex-col justify-end"><div className={`${item.c} w-10 h-10 rounded-full flex items-center justify-center mb-4 text-white`}><item.i size={20}/></div><h3 className="text-2xl font-bold text-white">{item.t}</h3></div></div>
+            
+            <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 snap-x scrollbar-hide md:grid md:grid-cols-4 md:pb-0 md:overflow-visible">
+                {[
+                    {t: t.cat1, d: t.desc1, i: MapPin, c: "bg-emerald-500", img: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800"}, 
+                    {t: t.cat2, d: t.desc2, i: Gift, c: "bg-orange-500", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=800"}, 
+                    {t: t.cat3, d: t.desc3, i: Users, c: "bg-blue-500", img: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800"},
+                    {t: t.cat4, d: t.desc4, i: FlaskConical, c: "bg-purple-500", img: "https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=800"} 
+                ].map((item, idx) => (
+                    <div key={idx} className="snap-center shrink-0 w-[80vw] md:w-auto h-[400px] rounded-3xl overflow-hidden relative group cursor-pointer shadow-xl">
+                        <img src={item.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Card"/>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-6 flex flex-col justify-end">
+                            <div className={`${item.c} w-10 h-10 rounded-full flex items-center justify-center mb-4 text-white shadow-lg`}><item.i size={20}/></div>
+                            <h3 className="text-2xl font-bold text-white mb-2">{item.t}</h3>
+                            <p className="text-slate-300 text-xs md:text-sm leading-relaxed opacity-90">{item.d}</p>
+                        </div>
+                    </div>
                 ))}
             </div>
          </div>
@@ -330,6 +354,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   const [loading, setLoading] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState(['Plastic']);
   const [deliveryMethod, setDeliveryMethod] = useState('Pickup');
+  const [expandedImage, setExpandedImage] = useState(null); // For Image Zoom
 
   useEffect(() => { if (!currentUser) navigate('/login'); }, [currentUser, navigate]);
   if (!currentUser) return null;
@@ -343,7 +368,15 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   const toggleSelection = (id) => { if (selectedTypes.includes(id)) { if (selectedTypes.length > 1) setSelectedTypes(selectedTypes.filter(t => t !== id)); } else { setSelectedTypes([...selectedTypes, id]); } };
 
   const handleRedeem = (reward) => { if (totalPoints >= reward.cost) { if(window.confirm(`${t.redeemConfirm} "${reward.name}"?`)) { alert(`🎉 ${t.redeemSuccess}\n\nCode: EC-${Math.floor(Math.random() * 9000) + 1000}`); } } else { alert(`🔒 ${t.locked} \n\n${t.needMore}`); } };
+  
   const handleJoinEvent = async (ev) => { if(window.confirm(`${t.join} "${ev.title}"?`)) { await supabase.from('events').update({ participants: (ev.participants || 0) + 1 }).eq('id', ev.id); alert(`Success!`); fetchRequests(); } };
+
+  // HANDLE ZOOM (Only if enabled by Admin)
+  const handleImageClick = (ev) => {
+      if(ev.zoom_enabled) {
+          setExpandedImage(ev.img);
+      }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setLoading(true);
@@ -377,15 +410,38 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
 
         <div className="mb-6"><h3 className="text-lg font-bold mb-3 flex items-center gap-2"><Calendar className="text-blue-500" size={18}/> {t.events}</h3>
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
-            {dbEvents.length === 0 ? <p className="text-sm opacity-50">{t.noEvents}</p> : dbEvents.map(ev => (<div key={ev.id} className={`snap-start shrink-0 w-[240px] md:w-[260px] rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition-all group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}><div className="h-28 md:h-32 overflow-hidden relative bg-slate-200"><img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={ev.title}/><div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide text-slate-800">{ev.date}</div><div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[9px] font-bold text-white flex items-center gap-1"><Users size={10} className="text-emerald-400"/> {ev.participants || 0} {t.joined}</div></div><div className="p-3"><h4 className="font-bold text-sm mb-1 truncate">{ev.title}</h4><p className="text-[10px] opacity-60 flex items-center gap-1 mb-3"><MapPin size={10}/> {ev.loc}</p><button onClick={() => handleJoinEvent(ev)} className={`w-full py-2 border rounded-lg text-[10px] font-bold transition-colors flex items-center justify-center gap-1 ${isDark ? 'border-slate-600 hover:bg-emerald-600 hover:border-emerald-600 text-slate-300' : 'border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 bg-slate-50'}`}>{t.join} <ExternalLink size={10}/></button></div></div>))}
+            {dbEvents.length === 0 ? <p className="text-sm opacity-50">{t.noEvents}</p> : dbEvents.map(ev => (
+                <div key={ev.id} className={`snap-start shrink-0 w-[240px] md:w-[260px] rounded-xl overflow-hidden border shadow-sm hover:shadow-md transition-all group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                    <div 
+                        className={`h-32 md:h-40 overflow-hidden relative bg-slate-200 ${ev.zoom_enabled ? 'cursor-zoom-in' : ''}`}
+                        onClick={() => handleImageClick(ev)}
+                    >
+                        <img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={ev.title}/>
+                        {ev.zoom_enabled && <div className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"><Eye size={12}/></div>}
+                    </div>
+                    
+                    <div className="p-4">
+                        <span className={`inline-block px-2 py-1 rounded text-[10px] font-bold uppercase mb-2 ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{ev.date}</span>
+                        <h4 className="font-bold text-sm mb-1 truncate">{ev.title}</h4>
+                        <p className="text-[10px] opacity-60 flex items-center gap-1 mb-3"><MapPin size={10}/> {ev.loc}</p>
+                        
+                        <div className="flex items-center justify-between mt-3">
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500"><Users size={12}/> {ev.participants || 0}</span>
+                            <button onClick={() => handleJoinEvent(ev)} className={`px-4 py-1.5 border rounded-lg text-[10px] font-bold transition-colors ${isDark ? 'border-slate-600 hover:bg-emerald-600 hover:border-emerald-600 text-slate-300' : 'border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 bg-slate-50'}`}>{t.join}</button>
+                        </div>
+                    </div>
+                </div>
+            ))}
         </div></div>
 
+        {/* LOGS & NEWS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2"><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><History size={16} className="text-purple-500"/> {t.logs}</h3><div className={`rounded-2xl p-4 border shadow-sm min-h-[300px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>{dbRequests.filter(r=>r.student === currentUser.name).length === 0 ? <p className="text-center opacity-50 py-20 text-xs">{t.noLogs}</p> : dbRequests.filter(r=>r.student === currentUser.name).map(req => (<div key={req.id} className={`flex justify-between items-center py-4 border-b last:border-0 transition-colors px-2 rounded-lg ${isDark ? 'border-slate-700 hover:bg-slate-700' : 'border-slate-50 hover:bg-slate-50'}`}><div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : req.status === 'Rejected' ? 'bg-red-100 text-red-500' : 'bg-orange-100 text-orange-500'}`}>{req.status === 'Approved' ? <CheckCircle size={18}/> : req.status === 'Rejected' ? <XCircle size={18}/> : <Loader2 size={18} className="animate-spin"/>}</div><div><p className="font-bold text-sm flex items-center gap-2">{req.type} {req.method === 'Drop-off' && <span className="bg-purple-100 text-purple-600 text-[9px] px-1 rounded">SELF</span>}</p><p className="text-[10px] opacity-60 font-medium">{req.date} • {req.weight} • {req.location}</p></div></div><div className="text-right"><span className="block font-black text-emerald-500 text-sm">+{req.points} pts</span><span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full ${req.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' : req.status === 'Rejected' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>{req.status}</span></div></div>))}</div></div>
             <div><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><Megaphone size={16} className="text-red-500"/> {t.updates}</h3><div className={`rounded-2xl p-5 border min-h-[300px] ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-blue-50 border-blue-100'}`}>{dbNews.map(n => (<div key={n.id} className={`mb-4 pb-4 border-b last:border-0 ${isDark ? 'border-slate-700' : 'border-blue-100'}`}><span className="bg-blue-200 text-blue-800 text-[9px] font-bold px-2 py-0.5 rounded mb-2 inline-block">{n.date}</span><p className={`font-bold text-sm mb-1 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{n.title}</p><p className={`text-[10px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-blue-600'}`}>{n.content}</p></div>))}</div></div>
         </div>
       </main>
 
+      {/* NEW ENTRY MODAL */}
       {showNewEntry && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in"><div className={`w-full max-w-lg rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto ${isDark ? 'bg-slate-800 text-white' : 'bg-white text-slate-900'}`}><button onClick={() => setShowNewEntry(false)} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><XCircle/></button>
         <div className="text-center mb-6"><h2 className="text-2xl font-black flex items-center justify-center gap-2"><Leaf className="text-emerald-500"/> {t.newEntry}</h2></div>
@@ -399,6 +455,14 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             <button disabled={loading} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg active:scale-95">{loading ? "Calculating..." : "Submit Recycle Entry"}</button>
         </form></div></div>
       )}
+
+      {/* IMAGE ZOOM MODAL */}
+      {expandedImage && (
+          <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 animate-in fade-in" onClick={() => setExpandedImage(null)}>
+              <button className="absolute top-4 right-4 text-white p-2 bg-white/10 rounded-full hover:bg-white/20"><X/></button>
+              <img src={expandedImage} className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()} alt="Zoomed"/>
+          </div>
+      )}
     </div>
   );
 }
@@ -407,10 +471,51 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
 function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, fetchData, companyFund, t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [eventForm, setEventForm] = useState({ title: '', date: '', loc: '', img: null, zoom_enabled: false });
+  const [uploading, setUploading] = useState(false);
+
   useEffect(() => { if(currentUser?.role !== 'admin') navigate('/login'); }, [currentUser, navigate]);
 
   const handleStatus = async (id, status) => { await supabase.from('requests').update({ status }).eq('id', id); fetchData(); };
-  const handleAddEvent = async (e) => { e.preventDefault(); await supabase.from('events').insert([{ title: e.target.title.value, date: e.target.date.value, loc: e.target.loc.value, img: 'https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop', participants: 0 }]); alert("Event Published!"); fetchData(); e.target.reset(); };
+  
+  // IMAGE UPLOAD LOGIC
+  const handleImageUpload = async (e) => {
+      try {
+          setUploading(true);
+          const file = e.target.files[0];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          let { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
+          if (uploadError) throw uploadError;
+
+          const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+          setEventForm({ ...eventForm, img: data.publicUrl });
+          alert("Image uploaded!");
+      } catch (error) {
+          alert("Upload failed (Check Supabase Bucket Policies): " + error.message);
+      } finally {
+          setUploading(false);
+      }
+  };
+
+  const handleAddEvent = async (e) => { 
+      e.preventDefault(); 
+      if (!eventForm.img) return alert("Please upload an image!");
+      await supabase.from('events').insert([eventForm]); 
+      alert("Event Published!"); fetchData(); 
+      setEventForm({ title: '', date: '', loc: '', img: null, zoom_enabled: false }); 
+  };
+  
+  // DELETE FUNCTION
+  const handleDeleteEvent = async (id) => {
+      if(window.confirm("Are you sure you want to delete this event?")) {
+          const { error } = await supabase.from('events').delete().eq('id', id);
+          if(error) alert("Error: " + error.message); else { alert("Event deleted."); fetchData(); }
+      }
+  };
+
   const handleAddNews = async (e) => { e.preventDefault(); await supabase.from('news').insert([{ title: e.target.title.value, content: e.target.content.value, date: new Date().toISOString().split('T')[0] }]); alert("Announcement Posted!"); fetchData(); e.target.reset(); };
 
   const totalUsers = new Set(dbRequests.map(r => r.student)).size;
@@ -444,7 +549,8 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
             <div className="px-6">
             {activeTab === 'overview' && (
                 <div className="space-y-6">
-                    <div className="grid grid-cols-3 gap-6">
+                    {/* FLUID RESPONSIVE GRID FIX */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><div><p className="text-xs font-bold uppercase opacity-60">Total Users</p><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div>
                         <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><div><p className="text-xs font-bold uppercase opacity-60">Total Funding</p><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div>
                         <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-4"><div className="p-3 bg-orange-100 text-orange-600 rounded-xl"><AlertCircle size={24}/></div><div><p className="text-xs font-bold uppercase opacity-60">Pending Req</p><h3 className="text-3xl font-black">{pendingCount}</h3></div></div></div>
@@ -484,15 +590,43 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                     <div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                         <h4 className="font-bold mb-4">Create New Event</h4>
                         <form onSubmit={handleAddEvent} className="grid grid-cols-2 gap-4">
-                            <input name="title" placeholder="Event Title" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
-                            <input name="date" placeholder="Date (e.g 25 Dec 2025)" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
-                            <input name="loc" placeholder="Location" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 col-span-2 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
+                            <input value={eventForm.title} onChange={e=>setEventForm({...eventForm, title: e.target.value})} placeholder="Event Title" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
+                            <input value={eventForm.date} onChange={e=>setEventForm({...eventForm, date: e.target.value})} placeholder="Date (e.g 25 Dec 2025)" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
+                            
+                            {/* --- FILE UPLOAD INPUT --- */}
+                            <div className="col-span-2">
+                                <label className={`block text-xs font-bold mb-2 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cover Image</label>
+                                <div className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDark ? 'border-slate-700 hover:border-emerald-500' : 'border-slate-300 hover:border-emerald-500'}`}>
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="fileUpload"/>
+                                    <label htmlFor="fileUpload" className="flex flex-col items-center cursor-pointer">
+                                        {uploading ? <Loader2 className="animate-spin text-emerald-500"/> : <Upload className="text-slate-400 mb-2"/>}
+                                        <span className="text-xs font-bold text-slate-500">{uploading ? "Uploading..." : eventForm.img ? "Image Uploaded!" : "Click to Upload Image"}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <input value={eventForm.loc} onChange={e=>setEventForm({...eventForm, loc: e.target.value})} placeholder="Location" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 col-span-2 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
+                            
+                            {/* ZOOM TOGGLE */}
+                            <div className={`flex items-center justify-between p-3 border rounded-xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                <span className="text-sm font-bold opacity-70 flex items-center gap-2"><ImageIcon size={16}/> Allow Image Zoom?</span>
+                                <button type="button" onClick={() => setEventForm({...eventForm, zoom_enabled: !eventForm.zoom_enabled})} className={`w-10 h-5 rounded-full relative transition-colors ${eventForm.zoom_enabled ? 'bg-emerald-500' : 'bg-slate-400'}`}>
+                                    <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${eventForm.zoom_enabled ? 'left-6' : 'left-1'}`}></div>
+                                </button>
+                            </div>
+
                             <button className="col-span-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Publish Event</button>
                         </form>
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {dbEvents.map(ev => (
-                            <div key={ev.id} className={`p-4 rounded-xl border shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                            <div key={ev.id} className={`p-4 rounded-xl border shadow-sm relative group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                <button onClick={() => handleDeleteEvent(ev.id)} className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"><Trash2 size={14}/></button>
+                                <div className="h-32 overflow-hidden rounded-lg mb-3 relative">
+                                    <img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover"/>
+                                    {ev.zoom_enabled && <div className="absolute bottom-2 right-2 bg-black/60 text-white p-1 rounded-md"><Eye size={12}/></div>}
+                                </div>
                                 <h4 className="font-bold">{ev.title}</h4>
                                 <p className="text-xs opacity-60">{ev.date} • {ev.loc}</p>
                                 <div className={`mt-4 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}>
