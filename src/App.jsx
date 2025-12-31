@@ -1,400 +1,542 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { 
-  RefreshCw, Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
-  LogOut, Plus, CheckCircle, XCircle, MapPin, Loader2, Search, 
-  Megaphone, Trash2, Zap, Smile, CircuitBoard,
-  Fish, CloudRain, ClipboardList, Users, Package, BarChart3, 
-  Ticket, Shirt, Utensils, Lock, Database, Smartphone, FileText, Coffee
+  Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
+  LogOut, Plus, CheckCircle, XCircle, MapPin, Loader2, 
+  Megaphone, Trash2, Zap, Smile, BookOpen, 
+  Fish, CloudRain, Users, Hand, Coins, 
+  BarChart3, ChevronRight, ExternalLink, Calendar
 } from 'lucide-react';
 // IMPORT SUPABASE
 import { supabase } from './supabaseClient';
 
-// --- DATABASE BAHASA ---
+// --- CONFIG & TEXT ---
 const t = {
   en: {
-    appName: "SisaSync", slogan: "Synchronize Waste. Sustain Life.",
-    heroTitle: "SISASYNC", heroSubtitle: "NETWORK",
-    heroDesc: "Integrated engineering solution for campus waste. Sync data to the cloud.",
-    getStarted: "Get Started", login: "Login", welcomeBack: "Welcome,",
-    dashboard: "Hub", history: "History", rewards: "Redeem", logout: "Log Out",
-    newRequest: "New Entry", totalPoints: "Eco-Credits", recentActivity: "Recent Activity",
-    status: "Status", wasteType: "Select Material", locationLabel: "Location",
-    weightKg: "Weight (kg)", submit: "Submit Data", studentTab: "Student",
-    adminTab: "Admin", pending: "Pending", approved: "Completed", rejected: "Rejected",
-    newsFeed: "Updates", manageReq: "Requests", announcements: "Alerts",
-    postNews: "Post Update", titlePlaceholder: "Subject...", contentPlaceholder: "Message...",
-    postBtn: "Post", back: "Back", goHome: "RETURN TO HUB",
-    notFoundDesc: "ERROR 404: PAGE NOT FOUND.",
-    impactTitle: "Impact", impactCO2: "CO2 Reduced", impactAnimals: "Life Saved",
-    impactEnergy: "Energy", ptsPerKg: "pts/kg",
-    redeemTitle: "Rewards", redeemDesc: "Exchange points for items.",
-    notEnough: "Insufficient Points", redeemSuccess: "Redeem Success!",
-    confirmRedeem: "Redeem", selectItem: "Select Item"
-  },
-  ms: {
-    appName: "SisaSync", slogan: "Menyegerakkan Sisa. Melestarikan Alam.",
-    heroTitle: "SISASYNC", heroSubtitle: "JARINGAN",
-    heroDesc: "Solusi kejuruteraan sisa kampus. Segerakkan data ke awan.",
-    getStarted: "Mula Sekarang", login: "Log Masuk", welcomeBack: "Selamat Datang,",
-    dashboard: "Hab", history: "Sejarah", rewards: "Tebus", logout: "Keluar",
-    newRequest: "Entri Baru", totalPoints: "Kredit Eco", recentActivity: "Aktiviti Terkini",
-    status: "Status", wasteType: "Pilih Bahan", locationLabel: "Lokasi",
-    weightKg: "Berat (kg)", submit: "Hantar Data", studentTab: "Pelajar",
-    adminTab: "Admin", pending: "Menunggu", approved: "Selesai", rejected: "Ditolak",
-    newsFeed: "Berita", manageReq: "Permintaan", announcements: "Notis",
-    postNews: "Hantar Berita", titlePlaceholder: "Tajuk...", contentPlaceholder: "Mesej...",
-    postBtn: "Hantar", back: "Kembali", goHome: "BALIK UTAMA",
-    notFoundDesc: "RALAT 404: HALAMAN TIADA.",
-    impactTitle: "Impak", impactCO2: "Kurang CO2", impactAnimals: "Hidupan",
-    impactEnergy: "Tenaga", ptsPerKg: "mata/kg",
-    redeemTitle: "Ganjaran", redeemDesc: "Tukar mata untuk item.",
-    notEnough: "Mata Tak Cukup", redeemSuccess: "Berjaya Tebus!",
-    confirmRedeem: "Tebus", selectItem: "Pilih Item"
+    appName: "EDUCYCLE", slogan: "Knowledge for Earth. Cycle for Future.",
+    heroTitle: "EDUCYCLE", heroSubtitle: "INITIATIVE",
+    heroDesc: "A campus-wide ecosystem transforming waste into education funds and green innovation.",
+    getStarted: "Explore Mission", login: "Access Portal",
+    aboutTitle: "Who We Are", 
+    aboutDesc: "We provide a seamless pickup service for recyclables and drop-off points across campus. Our goal is to reduce landfill waste while funding student activities.",
+    cat1: "Our Programs", cat1Desc: "Community-driven events like 'Gotong-Royong' and Eco-Workshops.",
+    cat2: "Merchandise", cat2Desc: "Upcycled products: Notebooks, Tote bags, and Reusable kits.",
+    cat3: "Pickup Service", cat3Desc: "Door-to-door collection for heavy recyclables at hostels & faculties.",
+    dashboard: "Dashboard", welcome: "Welcome back,",
+    fundingTitle: "Company Seed Fund", fundingDesc: "Current round funding for Phase 1 expansion.",
+    raised: "Raised", goal: "Target",
+    impactTitle: "Eco-Impact Calculator", 
+    redeemTitle: "Rewards Center", redeemDesc: "Redeem vouchers & exclusive merch.",
+    eventsTitle: "Upcoming Events", joinBtn: "Join Event",
+    newsTitle: "Announcements", pending: "Pending", approved: "Verified",
+    newReq: "New Recycle Entry",
+    fundCTA: "Fund Us"
   }
 };
 
 const REWARDS_DATA = [
-  { id: 'r1', name: "RM5 Voucher", cost: 500, icon: Utensils },
-  { id: 'r2', name: "RM10 Voucher", cost: 900, icon: Ticket },
-  { id: 'r3', name: "SisaSync Tee", cost: 2500, icon: Shirt },
-  { id: 'r4', name: "Metal Straw", cost: 1200, icon: Leaf },
+  { id: 'r1', name: "RM5 Cafeteria", cost: 500, icon: Gift },
+  { id: 'r2', name: "EduCycle Notebook", cost: 1200, icon: BookOpen },
+  { id: 'r3', name: "Exclusive Tee", cost: 2500, icon: Smile },
 ];
 
-const POINT_RATES = {
-  'Plastic': 10, 'Paper': 5, 'Tin': 15, 'E-Waste': 50
-};
+const EVENTS_DATA = [
+  { id: 1, title: "Gotong-Royong Perdana", date: "15 Jan 2025", loc: "Central Lake", img: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?q=80&w=600&auto=format&fit=crop" },
+  { id: 2, title: "FunRun EcoLife 5KM", date: "20 Feb 2025", loc: "Stadium Arena", img: "https://images.unsplash.com/photo-1452626038306-369663ca05bb?q=80&w=600&auto=format&fit=crop" },
+  { id: 3, title: "E-Waste Workshop", date: "05 Mar 2025", loc: "Eng. Hall", img: "https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=600&auto=format&fit=crop" },
+];
 
+// --- MAIN APP COMPONENT ---
 export default function App() {
-  const [lang, setLang] = useState('en');
   const [currentUser, setCurrentUser] = useState(null);
-  const txt = t[lang];
-  const toggleLang = () => setLang(prev => prev === 'en' ? 'ms' : 'en');
+  
+  // AUTO-LOGIN LOGIC (PERSISTENCE)
+  useEffect(() => {
+    const savedUser = localStorage.getItem('educycle_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const handleSetUser = (user) => {
+    setCurrentUser(user);
+    if(user) localStorage.setItem('educycle_user', JSON.stringify(user));
+    else localStorage.removeItem('educycle_user');
+  };
 
   return (
     <Router>
-      <AppRoutes lang={lang} toggleLang={toggleLang} txt={txt} currentUser={currentUser} setCurrentUser={setCurrentUser} />
+      <AppRoutes currentUser={currentUser} setCurrentUser={handleSetUser} />
     </Router>
   );
 }
 
-function AppRoutes({ lang, toggleLang, txt, currentUser, setCurrentUser }) {
+function AppRoutes({ currentUser, setCurrentUser }) {
   const [dbRequests, setDbRequests] = useState([]);
-  const [newsList, setNewsList] = useState([
-    { id: 1, title: 'Maintenance', content: 'Trucks arrive 10 AM Saturday.', date: '2023-12-25' },
-    { id: 2, title: 'System Update', content: 'Plastic points increased 1.5x.', date: '2023-12-24' },
-  ]);
+  
+  // Funding State (Shark Tank Feature)
+  const [companyFund, setCompanyFund] = useState(3250); // Mula RM3250
+  const fundGoal = 5000;
+
+  // FETCH DATA
+  const fetchRequests = async () => {
+    const { data } = await supabase.from('requests').select('*').order('id', { ascending: false });
+    if (data) setDbRequests(data);
+  };
 
   useEffect(() => { fetchRequests(); }, []);
 
-  const fetchRequests = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('requests')
-        .select('*')
-        .order('id', { ascending: false });
-      if (error) throw error;
-      if (data) setDbRequests(data);
-    } catch (error) { console.log('Connection Error:', error.message); }
-  };
-
   return (
     <Routes>
-      <Route path="/" element={<LandingPage lang={lang} toggleLang={toggleLang} txt={txt} />} />
-      <Route path="/login" element={<LoginPage txt={txt} setCurrentUser={setCurrentUser} />} />
-      <Route path="/student-dashboard" element={<StudentDashboard txt={txt} currentUser={currentUser} setCurrentUser={setCurrentUser} dbRequests={dbRequests} fetchRequests={fetchRequests} newsList={newsList} />} />
-      <Route path="/admin-dashboard" element={<AdminDashboard txt={txt} currentUser={currentUser} dbRequests={dbRequests} fetchRequests={fetchRequests} newsList={newsList} setNewsList={setNewsList} />} />
-      <Route path="*" element={<NotFoundPage txt={txt} />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage setCurrentUser={setCurrentUser} />} />
+      <Route path="/dashboard" element={<UserDashboard currentUser={currentUser} setCurrentUser={setCurrentUser} dbRequests={dbRequests} fetchRequests={fetchRequests} companyFund={companyFund} setCompanyFund={setCompanyFund} fundGoal={fundGoal}/>} />
+      <Route path="/admin-dashboard" element={<AdminDashboard currentUser={currentUser} setCurrentUser={setCurrentUser} dbRequests={dbRequests} fetchRequests={fetchRequests}/>} />
     </Routes>
   );
 }
 
-// 1. LANDING PAGE
-function LandingPage({ lang, toggleLang, txt }) {
+// 1. LANDING PAGE (REBRANDED)
+function LandingPage() {
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const txt = t.en;
+
+  const scrollToAbout = () => {
+    document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <div className="font-sans bg-white text-slate-800 overflow-x-hidden">
-       <nav className={`fixed top-0 w-full z-50 px-4 md:px-10 py-4 flex justify-between items-center transition-all ${scrolled ? 'bg-[#0f172a]/95 backdrop-blur-md shadow-lg py-3' : 'bg-transparent'}`}>
-         <div className="flex items-center gap-2 font-black text-lg md:text-2xl tracking-tight text-white"><RefreshCw className="text-emerald-400 animate-spin-slow w-6 h-6 md:w-8 md:h-8" /> {txt.appName}</div>
-         <div className="flex gap-2 md:gap-3">
-            <button onClick={toggleLang} className="px-3 py-1 md:px-4 md:py-2 font-bold text-[10px] md:text-xs bg-white/10 border border-white/30 text-white rounded-full hover:bg-white hover:text-emerald-900 uppercase backdrop-blur-sm transition-all">{lang}</button>
-            <button onClick={() => navigate('/login')} className="bg-emerald-500 text-white px-4 py-1 md:px-6 md:py-2 rounded-full font-bold text-xs md:text-sm hover:bg-emerald-400 shadow-lg transition-all active:scale-95">{txt.login}</button>
-         </div>
-       </nav>
+    <div className="font-sans bg-slate-50 text-slate-800 overflow-x-hidden">
+       {/* HERO SECTION */}
        <header className="relative h-screen flex flex-col items-center justify-center text-center px-4">
          <div className="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=2670&auto=format&fit=crop" className="w-full h-full object-cover" alt="Forest"/>
-            <div className="absolute inset-0 bg-black/50"></div>
+            {/* Background Image: Realistic Campus/Nature */}
+            <img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nature"/>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-slate-900"></div>
          </div>
-         <div className="relative z-10 max-w-5xl space-y-4 md:space-y-6 animate-fade-in-up mt-10">
-           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-400/50 rounded-full text-emerald-300 font-bold text-[10px] md:text-xs uppercase tracking-widest backdrop-blur-md"><Zap size={12}/> {txt.slogan}</div>
-           <h1 className="text-5xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none drop-shadow-2xl">{txt.heroTitle}<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200 tracking-normal">{txt.heroSubtitle}</span></h1>
-           <p className="text-sm md:text-2xl text-emerald-100 max-w-xs md:max-w-2xl mx-auto leading-relaxed font-medium drop-shadow-md px-2">{txt.heroDesc}</p>
-           <button onClick={() => navigate('/login')} className="group w-full md:w-auto px-8 py-4 md:px-12 md:py-6 bg-white text-emerald-900 font-black rounded-full text-lg md:text-xl shadow-xl hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-3 mx-auto mt-4">{txt.getStarted} <ArrowRight className="group-hover:translate-x-1 transition-transform"/></button>
+         
+         <nav className="absolute top-0 w-full z-50 px-6 py-6 flex justify-between items-center">
+            <div className="flex items-center gap-2 font-black text-2xl text-white tracking-tight">
+                {/* LOGO: BOOK + LEAF */}
+                <div className="bg-emerald-500 p-2 rounded-lg flex items-center justify-center">
+                    <BookOpen className="text-white w-6 h-6" />
+                    <Leaf className="text-emerald-900 w-4 h-4 -ml-2 mt-2" />
+                </div>
+                {txt.appName}
+            </div>
+            <button onClick={() => navigate('/login')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-2 rounded-full font-bold hover:bg-white hover:text-emerald-900 transition-all">{txt.login}</button>
+         </nav>
+
+         <div className="relative z-10 max-w-4xl space-y-6 animate-fade-in-up mt-10">
+           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/30 border border-emerald-400/50 rounded-full text-emerald-300 font-bold text-xs uppercase tracking-widest backdrop-blur-md">
+             <Zap size={14}/> {txt.heroSubtitle}
+           </div>
+           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
+             {txt.heroTitle}<span className="text-emerald-400">.</span>
+           </h1>
+           <p className="text-xl md:text-2xl text-slate-200 max-w-2xl mx-auto font-light leading-relaxed">
+             {txt.heroDesc}
+           </p>
+           <button onClick={scrollToAbout} className="mt-8 px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-lg shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-2 mx-auto">
+             {txt.getStarted} <ArrowRight />
+           </button>
+         </div>
+         
+         {/* Scroll Indicator */}
+         <div className="absolute bottom-10 animate-bounce text-white/50">
+            <p className="text-xs uppercase tracking-widest mb-2">Scroll to Discover</p>
+            <ArrowRight className="rotate-90 mx-auto" />
          </div>
        </header>
+
+       {/* ABOUT US SECTION (SCROLLABLE CARDS) */}
+       <section id="about-section" className="py-20 bg-white">
+         <div className="max-w-7xl mx-auto px-6">
+            <div className="mb-12 max-w-2xl">
+                <h2 className="text-4xl font-black text-slate-900 mb-4">{txt.aboutTitle}</h2>
+                <p className="text-lg text-slate-500 leading-relaxed">{txt.aboutDesc}</p>
+            </div>
+
+            {/* HORIZONTAL SCROLL CONTAINER */}
+            <div className="flex overflow-x-auto gap-6 pb-8 snap-x scrollbar-hide">
+                {/* CARD 1: SERVICE */}
+                <div className="snap-center shrink-0 w-[85vw] md:w-[400px] h-[500px] rounded-3xl overflow-hidden relative group cursor-pointer shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Service"/>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-8 flex flex-col justify-end">
+                        <div className="bg-emerald-500 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-white"><MapPin /></div>
+                        <h3 className="text-3xl font-bold text-white mb-2">{txt.cat3}</h3>
+                        <p className="text-slate-300">{txt.cat3Desc}</p>
+                    </div>
+                </div>
+
+                {/* CARD 2: PRODUCTS */}
+                <div className="snap-center shrink-0 w-[85vw] md:w-[400px] h-[500px] rounded-3xl overflow-hidden relative group cursor-pointer shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Product"/>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-8 flex flex-col justify-end">
+                        <div className="bg-orange-500 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-white"><Gift /></div>
+                        <h3 className="text-3xl font-bold text-white mb-2">{txt.cat2}</h3>
+                        <p className="text-slate-300">{txt.cat2Desc}</p>
+                    </div>
+                </div>
+
+                {/* CARD 3: PROGRAMS */}
+                <div className="snap-center shrink-0 w-[85vw] md:w-[400px] h-[500px] rounded-3xl overflow-hidden relative group cursor-pointer shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Program"/>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-8 flex flex-col justify-end">
+                        <div className="bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center mb-4 text-white"><Users /></div>
+                        <h3 className="text-3xl font-bold text-white mb-2">{txt.cat1}</h3>
+                        <p className="text-slate-300">{txt.cat1Desc}</p>
+                    </div>
+                </div>
+            </div>
+         </div>
+       </section>
     </div>
   );
 }
 
-// 2. LOGIN PAGE (USERNAME + EMAIL)
-function LoginPage({ txt, setCurrentUser }) {
+// 2. LOGIN PAGE (GENERAL USER + STEALTH ADMIN)
+function LoginPage({ setCurrentUser }) {
   const navigate = useNavigate();
-  const [isLoginAdmin, setIsLoginAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [usernameInput, setUsernameInput] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-  const [passInput, setPassInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
+
+  // Auto-redirect if already logged in (persistence)
+  useEffect(() => {
+    const saved = localStorage.getItem('educycle_user');
+    if (saved) navigate('/dashboard');
+  }, [navigate]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    setLoading(true);
+    
     setTimeout(() => {
-      setIsLoading(false);
-      
-      if (isLoginAdmin) {
-        if(emailInput === 'admin' && passInput === 'admin') {
-            setCurrentUser({ name: 'Admin Staff', email: 'admin@sisasync.com', role: 'admin' });
-            navigate('/admin-dashboard');
-        } else {
-            alert("For demo admin, use ID: 'admin' & Pass: 'admin'");
-        }
+      setLoading(false);
+      // Logic Login
+      if (formData.email === 'admin' && formData.password === 'admin') {
+        setCurrentUser({ name: 'Admin', email: 'admin@educycle.com', role: 'admin' });
+        navigate('/admin-dashboard');
       } else {
-        // Validate Student
-        if (emailInput.includes('@') && usernameInput.length > 2) {
-            // SIMPAN DUA-DUA DALAM currentUser
-            setCurrentUser({ name: usernameInput, email: emailInput, role: 'student' }); 
-            navigate('/student-dashboard');
+        // General User (Staff/Student)
+        if (formData.email.includes('@') && formData.username) {
+            setCurrentUser({ name: formData.username, email: formData.email, role: 'user' });
+            navigate('/dashboard');
         } else {
-            alert("Please enter a valid Username and Email Address.");
+            alert("Please enter valid credentials.");
         }
       }
     }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-[#F0FDF4] flex font-sans">
-       <div className="hidden lg:flex flex-1 relative bg-emerald-900 overflow-hidden"><img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=2670&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" alt="Recycle"/><div className="absolute inset-0 bg-gradient-to-t from-emerald-950 to-transparent"/><div className="absolute bottom-20 left-20 z-10 max-w-lg"><h1 className="text-5xl font-black text-white mb-4">Sync Your Waste.<br/>Save The Planet.</h1><p className="text-emerald-200 text-lg">Powered by SisaSync Technology.</p></div></div>
-       <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-8 bg-white relative w-full">
-         <button onClick={() => navigate('/')} className="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition-colors flex gap-2 font-bold group text-sm"><ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform"/> {txt.back}</button>
-         <div className="w-full max-w-sm mt-10 md:mt-0">
-            <div className="mb-8"><div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4"><RefreshCw size={28}/></div><h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-2">{txt.login}</h2><p className="text-slate-500 text-sm">Access your SisaSync account.</p></div>
-            <div className="bg-slate-100 p-1 rounded-xl flex mb-6"><button onClick={() => setIsLoginAdmin(false)} className={`flex-1 py-3 rounded-lg font-bold text-xs md:text-sm transition-all active:scale-95 ${!isLoginAdmin ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{txt.studentTab}</button><button onClick={() => setIsLoginAdmin(true)} className={`flex-1 py-3 rounded-lg font-bold text-xs md:text-sm transition-all active:scale-95 ${isLoginAdmin ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{txt.adminTab}</button></div>
-            
-            <form onSubmit={handleLogin} className="space-y-4">
-              {!isLoginAdmin && (
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Username</label>
-                  <input 
-                      type="text" 
-                      value={usernameInput}
-                      onChange={(e) => setUsernameInput(e.target.value)}
-                      required
-                      placeholder="e.g. AhmadNurez"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 transition-all text-sm"
-                  />
-                </div>
-              )}
-              
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">{isLoginAdmin ? "Admin ID" : "Email Address"}</label>
-                <input 
-                    type={isLoginAdmin ? "text" : "email"} 
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    required
-                    placeholder={isLoginAdmin ? "admin" : "ahmad@gmail.com"}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 transition-all text-sm"
-                />
-              </div>
-              
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Passcode</label>
-                <input 
-                    type="password" 
-                    value={passInput}
-                    onChange={(e) => setPassInput(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 transition-all text-sm"
-                />
-              </div>
-              <button disabled={isLoading} className={`w-full py-4 rounded-xl font-black text-white shadow-lg mt-4 transition-all active:scale-95 active:shadow-inner ${isLoginAdmin ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>{isLoading ? <Loader2 className="animate-spin mx-auto"/> : txt.login}</button>
-            </form>
-         </div>
+    <div className="min-h-screen bg-white flex">
+       {/* Left Side - Image */}
+       <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=2670&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Login"/>
+          <div className="relative z-10 text-white p-12">
+             <h1 className="text-6xl font-black mb-6">Join the<br/>Cycle.</h1>
+             <p className="text-xl text-slate-300">Staff & Students United for a Greener Future.</p>
+          </div>
+       </div>
+
+       {/* Right Side - Form */}
+       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-24 py-12 relative">
+          <button onClick={() => navigate('/')} className="absolute top-8 left-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-bold text-sm"><ArrowLeft size={16}/> Back</button>
+          
+          <div className="mb-10">
+             <div className="flex items-center gap-2 font-black text-2xl text-emerald-600 mb-2">
+                <BookOpen size={28}/> EDUCYCLE
+             </div>
+             <h2 className="text-4xl font-black text-slate-900">Access Portal</h2>
+             <p className="text-slate-500 mt-2">Enter your details to sync your contribution.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+             <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Username</label>
+                <input type="text" required onChange={e => setFormData({...formData, username: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500"/>
+             </div>
+             <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+                <input type="email" required onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500"/>
+             </div>
+             <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                <input type="password" required onChange={e => setFormData({...formData, password: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500"/>
+             </div>
+             
+             <button disabled={loading} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                {loading ? <Loader2 className="animate-spin"/> : "Secure Login"}
+             </button>
+          </form>
+
+          {/* STEALTH ADMIN BUTTON */}
+          <button onClick={() => { setFormData({username: 'Admin', email: 'admin', password: ''}); alert("Admin Mode Activated. Enter Password: 'admin'"); }} className="mt-8 text-[10px] text-slate-200 hover:text-slate-400 font-bold uppercase tracking-widest text-center transition-colors">
+             Admin Access
+          </button>
        </div>
     </div>
   );
 }
 
-// 3. STUDENT DASHBOARD (Submit Username AND Email)
-function StudentDashboard({ txt, currentUser, setCurrentUser, dbRequests, fetchRequests, newsList }) {
+// 3. USER DASHBOARD (SHARK TANK FEATURES)
+function UserDashboard({ currentUser, setCurrentUser, dbRequests, fetchRequests, companyFund, setCompanyFund, fundGoal }) {
   const navigate = useNavigate();
-  const [showRecycleModal, setShowRecycleModal] = useState(false);
-  const [showRedeemModal, setShowRedeemModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedTypes, setSelectedTypes] = useState(['Plastic']);
+  const [showNewEntry, setShowNewEntry] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => { if (!currentUser) navigate('/login'); }, [currentUser, navigate]);
-  if (!currentUser) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-emerald-600"/></div>;
+  if (!currentUser) return null;
 
-  const myApprovedRequests = dbRequests.filter(req => req.student === currentUser.name && req.status === 'Approved');
-  const points = myApprovedRequests.reduce((total, req) => total + (req.points || 0), 0);
-  const co2Saved = (points * 0.15).toFixed(1); 
-  const marineSaved = Math.floor(points / 200); 
-  const energySaved = (points * 0.5).toFixed(0); 
-  
-  const handleSubmitRequest = async (e) => {
-    e.preventDefault();
-    if(selectedTypes.length === 0) { alert("Please select at least one material."); return; }
-    setIsLoading(true);
+  // AI CALCULATIONS
+  const myReqs = dbRequests.filter(r => r.student === currentUser.name && r.status === 'Approved');
+  const totalPoints = myReqs.reduce((acc, curr) => acc + (curr.points || 0), 0);
+  const co2 = (totalPoints * 0.12).toFixed(1);
+  const energy = (totalPoints * 0.5).toFixed(0);
 
-    const typeString = selectedTypes.join(', ');
-    const weightVal = parseFloat(e.target.weight.value);
-    const locationVal = e.target.location.value;
-    const today = new Date().toISOString().split('T')[0];
-    const rate = POINT_RATES[selectedTypes[0]] || 5; 
-    const calculatedPoints = Math.floor(weightVal * rate);
+  // FUNDING BAR LOGIC
+  const fundProgress = Math.min((companyFund / fundGoal) * 100, 100);
 
-    try {
-      const { error } = await supabase
-        .from('requests')
-        .insert([
-          { 
-            student: currentUser.name,  // USERNAME
-            email: currentUser.email,   // EMAIL (NEW)
-            type: typeString, 
-            location: locationVal, 
-            weight: weightVal + 'kg', 
-            date: today,
-            status: 'Pending',
-            points: calculatedPoints
-          }
-        ]);
-        
-      if (error) throw error;
-      
-      alert("SisaSync: Data Uploaded! Email captured for records.");
-      setShowRecycleModal(false);
-      fetchRequests(); 
-    } catch (error) {
-      alert("Error uploading: " + error.message);
-    } finally {
-      setIsLoading(false);
+  // EVENT JOIN SIMULATION
+  const handleJoinEvent = (title) => {
+    // Simulasi buka Google Form
+    if(window.confirm(`Redirecting to Google Form for "${title}"...`)) {
+       // window.open('https://forms.google.com', '_blank'); // Uncomment if real
     }
   };
 
-  const toggleSelection = (id) => {
-    if (selectedTypes.includes(id)) { setSelectedTypes(selectedTypes.filter(t => t !== id)); } 
-    else { setSelectedTypes([...selectedTypes, id]); }
+  const handleLogout = () => {
+    if(window.confirm("Log out?")) {
+        setCurrentUser(null);
+        navigate('/');
+    }
   };
 
-  const wasteOptions = [
-    { id: 'Plastic', label: 'Plastic', icon: Coffee, points: '10', color: 'text-blue-500 bg-blue-50' },
-    { id: 'Paper', label: 'Paper', icon: FileText, points: '5', color: 'text-yellow-600 bg-yellow-50' },
-    { id: 'Tin', label: 'Metal', icon: Database, points: '15', color: 'text-gray-600 bg-gray-50' },
-    { id: 'E-Waste', label: 'E-Waste', icon: Smartphone, points: '50', color: 'text-purple-600 bg-purple-50' },
-  ];
+  // SUBMIT HANDLER
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const type = e.target.type.value;
+    const weight = e.target.weight.value;
+    const points = Math.floor(weight * 10); // Simple logic
+    const today = new Date().toISOString().split('T')[0];
 
-  const RecycleModal = () => (
-    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-emerald-900/40 backdrop-blur-sm p-0 md:p-4 animate-in fade-in">
-      <div className="bg-white border-t-4 md:border-4 border-emerald-100 w-full max-w-lg rounded-t-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative h-[90vh] md:h-auto overflow-y-auto">
-        <button onClick={() => setShowRecycleModal(false)} className="absolute top-4 right-4 md:top-6 md:right-6 text-slate-400 hover:text-red-500 bg-slate-50 p-2 rounded-full active:scale-90 transition-transform"><XCircle size={24} /></button>
-        <div className="text-center mb-6 mt-4 md:mt-0"><div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner"><RefreshCw size={28}/></div><h2 className="text-2xl font-black text-emerald-950">{txt.newRequest}</h2></div>
-        <form onSubmit={handleSubmitRequest} className="space-y-6 pb-10">
-          <div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 block text-center">{txt.wasteType}</label><div className="grid grid-cols-2 gap-3">{wasteOptions.map((option) => { const isSelected = selectedTypes.includes(option.id); return (<div key={option.id} onClick={() => toggleSelection(option.id)} className={`cursor-pointer rounded-2xl p-4 border-2 transition-all active:scale-95 flex flex-col items-center justify-center gap-2 group relative overflow-hidden ${isSelected ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200' : 'border-slate-100 hover:border-emerald-200 bg-white'}`}><div className={`p-3 rounded-full ${option.color} group-hover:scale-110 transition-transform`}><option.icon size={24} /></div><div className="text-center"><span className={`block font-bold text-sm ${isSelected ? 'text-emerald-900' : 'text-slate-600'}`}>{option.label}</span><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{option.points} {txt.ptsPerKg}</span></div>{isSelected && <div className="absolute top-2 right-2 text-emerald-500"><CheckCircle size={16} fill="currentColor" className="text-white"/></div>}</div>); })}</div></div>
-          <div className="space-y-4"><div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">{txt.locationLabel}</label><select name="location" className="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-400"><option value="Block A">Block A (Eng)</option><option value="Block B">Block B (Sci)</option><option value="Library">Library</option><option value="Cafe">Cafeteria</option></select></div><div><label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block ml-2">{txt.weightKg}</label><input name="weight" type="number" step="0.1" placeholder="2.5" required className="w-full bg-white border-2 border-slate-100 rounded-2xl p-3 font-bold text-slate-700 outline-none focus:border-emerald-400 text-lg"/></div></div>
-          <button type="submit" disabled={isLoading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-lg mt-2 flex justify-center items-center gap-2 transition-all active:scale-95 active:shadow-inner mb-4">{isLoading ? <Loader2 className="animate-spin"/> : <>{txt.submit} <CheckCircle size={20}/></>}</button>
-        </form>
-      </div>
-    </div>
-  );
+    const { error } = await supabase.from('requests').insert([{
+        student: currentUser.name, email: currentUser.email, type: type, weight: weight+'kg', location: 'Drop-off Point', status: 'Pending', date: today, points: points
+    }]);
 
-  const RedeemModal = () => {
-    const [selectedId, setSelectedId] = useState(null);
-    const confirmRedeem = () => {
-      const selectedItem = REWARDS_DATA.find(r => r.id === selectedId);
-      if (!selectedItem) return;
-      if (!window.confirm(`Confirm redeem ${selectedItem.name}?`)) return;
-      if (points >= selectedItem.cost) {
-        alert(`${txt.redeemSuccess} Item: ${selectedItem.name}`);
-        setSelectedId(null);
-      } else {
-        alert(txt.notEnough);
-      }
-    };
-    const activeItem = REWARDS_DATA.find(r => r.id === selectedId);
-    return (
-      <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-emerald-900/40 backdrop-blur-sm p-0 md:p-4 animate-in fade-in">
-        <div className="bg-white border-t-4 md:border-4 border-emerald-100 w-full max-w-lg rounded-t-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative h-[85vh] md:h-auto flex flex-col">
-          <button onClick={() => setShowRedeemModal(false)} className="absolute top-4 right-4 md:top-6 md:right-6 text-slate-400 hover:text-red-500 bg-slate-50 p-2 rounded-full active:scale-90 transition-transform z-20"><XCircle size={24} /></button>
-          <div className="text-center mb-6 flex-shrink-0 mt-4 md:mt-0"><div className="w-14 h-14 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner"><Gift size={28}/></div><h2 className="text-2xl font-black text-emerald-950">{txt.redeemTitle}</h2><div className="mt-2 bg-emerald-100 text-emerald-800 px-4 py-1 rounded-full inline-block font-bold text-xs">{txt.totalPoints}: {points} pts</div></div>
-          <div className="grid grid-cols-2 gap-3 mb-6 overflow-y-auto pr-2 custom-scrollbar flex-grow pb-20 md:pb-0">{REWARDS_DATA.map(item => { const canAfford = points >= item.cost; const isSelected = selectedId === item.id; return (<div key={item.id} onClick={() => { if (canAfford) setSelectedId(item.id); }} className={`border-2 rounded-2xl p-4 flex flex-col items-center text-center transition-all relative ${canAfford ? 'cursor-pointer active:scale-95 hover:border-emerald-300' : 'cursor-not-allowed opacity-40 grayscale bg-slate-50'} ${isSelected ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200' : 'border-slate-100'}`}><div className={`p-3 rounded-full mb-2 ${isSelected ? 'bg-emerald-200 text-emerald-700' : 'bg-slate-50 text-slate-600'}`}><item.icon size={20}/></div><h4 className="font-bold text-xs md:text-sm text-slate-800 leading-tight">{item.name}</h4><p className={`font-black text-[10px] md:text-xs mt-1 ${canAfford ? 'text-emerald-600' : 'text-slate-400'}`}>{item.cost} pts</p>{!canAfford && <div className="absolute top-2 right-2 text-slate-400"><Lock size={12}/></div>}{isSelected && <div className="absolute top-2 right-2 text-white bg-emerald-500 rounded-full p-1 shadow-md"><CheckCircle size={14} fill="currentColor"/></div>}</div>); })}</div>
-          <button onClick={confirmRedeem} disabled={!activeItem} className={`absolute bottom-6 left-6 right-6 md:static w-[calc(100%-3rem)] md:w-full py-4 rounded-2xl font-black text-white shadow-lg transition-all flex items-center justify-center gap-2 z-30 ${!activeItem ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95 active:shadow-inner'}`}>{activeItem ? `${txt.confirmRedeem}` : txt.selectItem}</button>
-        </div>
-      </div>
-    );
+    if (!error) { alert("Success!"); setShowNewEntry(false); fetchRequests(); }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#F0FDF4] text-slate-800 font-sans pb-24 md:pb-10">
-      {showRecycleModal && <RecycleModal />} {showRedeemModal && <RedeemModal />}
-      <nav className="fixed top-0 w-full z-40 bg-white/90 backdrop-blur-md border-b border-emerald-100 px-4 md:px-6 py-3 flex justify-between items-center"><div className="flex items-center gap-2 text-emerald-600 font-black text-lg md:text-xl cursor-pointer" onClick={() => navigate('/')}><RefreshCw size={24}/> <span className="hidden md:inline">{txt.appName}</span></div><div className="flex gap-2"><span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold flex items-center gap-1">{points} pts</span><button onClick={() => navigate('/')} className="text-slate-400 hover:text-red-500 p-1 active:scale-90 transition-transform"><LogOut size={20}/></button></div></nav>
-      <main className="pt-20 px-4 md:px-10 max-w-6xl mx-auto">
-        <header className="mb-6 md:mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4"><div><h1 className="text-2xl md:text-4xl font-black text-slate-800 mb-1">{txt.welcomeBack} <br className="md:hidden"/><span className="text-emerald-600 truncate max-w-[200px] md:max-w-md block">{currentUser.name}</span></h1><p className="text-xs text-slate-400 font-bold tracking-widest">{currentUser.email}</p></div><button onClick={() => setShowRecycleModal(true)} className="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg items-center gap-2 active:scale-95 active:shadow-inner transition-all"><Plus size={24}/> {txt.newRequest}</button></header>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8"><div className="bg-emerald-600 rounded-[2rem] p-6 md:p-8 text-white shadow-xl relative overflow-hidden group col-span-1 md:col-span-3 lg:col-span-1"><RefreshCw className="absolute -right-8 -bottom-8 w-48 h-48 opacity-10 rotate-45 pointer-events-none"/><p className="font-bold text-emerald-100 uppercase tracking-widest text-xs mb-2">{txt.totalPoints}</p><h2 className="text-5xl md:text-6xl font-black mb-6">{points}</h2><button onClick={() => setShowRedeemModal(true)} className="relative z-10 w-full bg-white text-emerald-700 px-4 py-3 rounded-xl font-bold text-sm hover:bg-emerald-50 flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 active:shadow-inner"><Gift size={18}/> {txt.rewards}</button></div><div className="col-span-1 md:col-span-3 lg:col-span-2 grid grid-cols-3 gap-2 md:gap-4">{[{ icon: CloudRain, val: co2Saved, unit: 'kg', label: txt.impactCO2, bg: 'bg-sky-100', txt: 'text-sky-600' }, { icon: Fish, val: marineSaved, unit: '', label: txt.impactAnimals, bg: 'bg-teal-100', txt: 'text-teal-600' }, { icon: Zap, val: energySaved, unit: 'kWh', label: txt.impactEnergy, bg: 'bg-yellow-100', txt: 'text-yellow-600' }].map((stat, i) => (<div key={i} className="bg-white rounded-[1.5rem] p-3 md:p-6 border-2 border-slate-50 shadow-sm flex flex-col items-center justify-center text-center group hover:border-emerald-200 transition-colors"><div className={`w-8 h-8 md:w-12 md:h-12 ${stat.bg} ${stat.txt} rounded-full flex items-center justify-center mb-2 md:mb-3`}><stat.icon size={16} className="md:w-6 md:h-6"/></div><h3 className="text-lg md:text-2xl font-black text-slate-800 leading-none">{stat.val}<span className="text-[10px] md:text-sm block md:inline font-medium text-slate-400 ml-1">{stat.unit}</span></h3><p className="text-slate-400 text-[9px] md:text-xs font-bold uppercase tracking-wider mt-1">{stat.label}</p></div>))}</div></div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-           <div className="lg:col-span-2"><h3 className="text-lg md:text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><History className="text-emerald-500"/> {txt.recentActivity}</h3><div className="space-y-3 md:space-y-4">{myApprovedRequests.length === 0 && dbRequests.filter(req => req.student === currentUser.name).length === 0 ? (<div className="text-slate-400 text-center py-10 border-2 border-dashed border-emerald-100 rounded-3xl text-sm flex flex-col items-center"><p>No records found for <strong>{currentUser.name}</strong>.</p><p className="text-xs mt-2">Start recycling to earn points!</p></div>) : (dbRequests.filter(r => r.student === currentUser.name).map((req) => (<div key={req.id} className="bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-all"><div className="flex items-center gap-3 md:gap-5"><div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-50 text-orange-400'}`}>{req.status === 'Approved' ? <Smile size={20} className="md:w-6 md:h-6"/> : <Loader2 size={20} className="md:w-6 md:h-6 animate-spin"/>}</div><div><h4 className="font-bold text-sm md:text-lg text-slate-800">{req.type}</h4><p className="text-slate-400 text-xs font-medium flex items-center gap-1"><MapPin size={10}/> {req.location}</p></div></div><div className="text-right"><span className={`block px-2 py-1 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider ${req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-50 text-orange-500'}`}>{req.status === 'Approved' ? txt.approved : txt.pending}</span>{req.status === 'Approved' && <span className="text-[10px] font-bold text-emerald-500">+{req.points} pts</span>}</div></div>)))}</div></div>
-           <div className="mt-4 md:mt-0"><div className="bg-blue-50/50 rounded-[2rem] p-6 border-2 border-blue-100/50 relative overflow-hidden h-full"><div className="flex items-center gap-2 mb-4 text-blue-600 font-bold uppercase text-xs tracking-wider"><Megaphone size={16}/> {txt.newsFeed}</div><div className="space-y-4">{newsList.map(n => (<div key={n.id} className="bg-white p-4 rounded-2xl border border-blue-100 relative shadow-sm"><div className="absolute top-3 right-3 w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div><h4 className="font-bold text-blue-900 text-xs md:text-sm leading-tight mb-1">{n.title}</h4><p className="text-[10px] md:text-xs text-blue-600 leading-relaxed">{n.content}</p></div>))}</div></div></div>
+    <div className="min-h-screen bg-slate-50 font-sans pb-20">
+      {/* HEADER WITH FUNDING BAR */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        {/* Funding Bar (Top Strip) */}
+        <div className="bg-slate-900 text-slate-300 text-[10px] py-2 px-4 md:px-10 flex items-center justify-between">
+            <div className="flex items-center gap-2"><BarChart3 size={12} className="text-emerald-400"/> <span>{t.en.fundingTitle}</span></div>
+            <div className="flex items-center gap-4 w-1/2 md:w-1/3">
+                <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{width: `${fundProgress}%`}}></div>
+                </div>
+                <span className="font-bold text-white whitespace-nowrap">RM{companyFund} / {fundGoal}</span>
+            </div>
+        </div>
+
+        <div className="px-4 md:px-10 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-2 text-emerald-700 font-black text-xl">
+                <BookOpen size={24}/> EDUCYCLE
+            </div>
+            <div className="flex items-center gap-4">
+                <div className="text-right hidden md:block">
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t.en.welcome}</p>
+                    <p className="font-bold text-slate-800">{currentUser.name}</p>
+                    <p className="text-[10px] text-emerald-600">{currentUser.email}</p>
+                </div>
+                <button onClick={handleLogout} className="bg-slate-100 p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"><LogOut size={18}/></button>
+            </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 md:px-10 py-8">
+        
+        {/* TOP ROW: IMPACT & REDEEM (SIDE BY SIDE) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            {/* 1. IMPACT CARD (2/3 Width) */}
+            <div className="lg:col-span-2 bg-emerald-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl flex flex-col justify-between min-h-[250px]">
+                <div className="relative z-10">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-emerald-200 text-xs font-bold uppercase tracking-widest mb-1">{t.en.impactTitle}</p>
+                            <h2 className="text-5xl font-black">{totalPoints} <span className="text-lg font-medium opacity-70">pts</span></h2>
+                        </div>
+                        <button onClick={() => setShowNewEntry(true)} className="bg-white text-emerald-800 px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-emerald-50 active:scale-95 transition-all flex items-center gap-2">
+                            <Plus size={16}/> {t.en.newReq}
+                        </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 mt-8">
+                        <div className="bg-emerald-500/30 p-4 rounded-2xl backdrop-blur-sm border border-emerald-400/20">
+                            <CloudRain className="mb-2 opacity-80" size={20}/>
+                            <p className="text-2xl font-bold">{co2}</p>
+                            <p className="text-[10px] uppercase opacity-70">kg CO2 Saved</p>
+                        </div>
+                        <div className="bg-emerald-500/30 p-4 rounded-2xl backdrop-blur-sm border border-emerald-400/20">
+                            <Zap className="mb-2 opacity-80" size={20}/>
+                            <p className="text-2xl font-bold">{energy}</p>
+                            <p className="text-[10px] uppercase opacity-70">kWh Energy</p>
+                        </div>
+                        <div className="bg-emerald-500/30 p-4 rounded-2xl backdrop-blur-sm border border-emerald-400/20">
+                            <Fish className="mb-2 opacity-80" size={20}/>
+                            <p className="text-2xl font-bold">{Math.floor(totalPoints/100)}</p>
+                            <p className="text-[10px] uppercase opacity-70">Marine Life</p>
+                        </div>
+                    </div>
+                </div>
+                <Leaf className="absolute -bottom-10 -right-10 text-emerald-500 w-64 h-64 opacity-20 rotate-12"/>
+            </div>
+
+            {/* 2. REDEEM SECTION (1/3 Width) */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col h-full">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2"><Gift size={18} className="text-orange-500"/> {t.en.redeemTitle}</h3>
+                    <span className="text-xs font-bold text-slate-400">{totalPoints} available</span>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                    {REWARDS_DATA.map(r => (
+                        <div key={r.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-colors cursor-pointer group">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-white p-2 rounded-lg shadow-sm text-slate-600 group-hover:text-emerald-600"><r.icon size={16}/></div>
+                                <div>
+                                    <p className="font-bold text-sm text-slate-700">{r.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold">{r.cost} pts</p>
+                                </div>
+                            </div>
+                            <ChevronRight size={16} className="text-slate-300 group-hover:text-emerald-500"/>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        {/* EVENTS SCROLL SECTION (NEW FEATURE) */}
+        <div className="mb-8">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><Calendar className="text-blue-500"/> {t.en.eventsTitle}</h3>
+            
+            {/* Horizontal Scroll Area */}
+            <div className="flex overflow-x-auto gap-4 pb-4 snap-x scrollbar-hide">
+                {EVENTS_DATA.map(ev => (
+                    <div key={ev.id} className="snap-start shrink-0 w-[280px] bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                        <div className="h-32 overflow-hidden relative">
+                            <img src={ev.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={ev.title}/>
+                            <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide text-slate-800">{ev.date}</div>
+                        </div>
+                        <div className="p-4">
+                            <h4 className="font-bold text-slate-800 mb-1 truncate">{ev.title}</h4>
+                            <p className="text-xs text-slate-500 flex items-center gap-1 mb-4"><MapPin size={12}/> {ev.loc}</p>
+                            <button onClick={() => handleJoinEvent(ev.title)} className="w-full py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors flex items-center justify-center gap-2">
+                                {t.en.joinBtn} <ExternalLink size={12}/>
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        {/* BOTTOM: HISTORY & ANNOUNCEMENTS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><History size={18} className="text-purple-500"/> Activity Log</h3>
+                <div className="bg-white rounded-3xl p-1 border border-slate-200 shadow-sm min-h-[200px]">
+                    {myReqs.length === 0 ? <p className="text-center text-slate-400 py-10 text-sm">No recent activity.</p> : 
+                        myReqs.map(req => (
+                            <div key={req.id} className="flex justify-between items-center p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><CheckCircle size={18}/></div>
+                                    <div>
+                                        <p className="font-bold text-slate-800 text-sm">{req.type}</p>
+                                        <p className="text-xs text-slate-400">{req.date} • {req.weight}</p>
+                                    </div>
+                                </div>
+                                <span className="text-xs font-black text-emerald-500">+{req.points} pts</span>
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
+            
+            <div>
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Megaphone size={18} className="text-red-500"/> Announcements</h3>
+                <div className="bg-blue-50 rounded-3xl p-6 border border-blue-100">
+                    <div className="mb-4 pb-4 border-b border-blue-100">
+                        <p className="font-bold text-blue-900 text-sm mb-1">System Maintenance</p>
+                        <p className="text-xs text-blue-600">Server upgrade scheduled for this Sunday at 2 AM.</p>
+                    </div>
+                    <div>
+                        <p className="font-bold text-blue-900 text-sm mb-1">Double Points Day!</p>
+                        <p className="text-xs text-blue-600">Recycle E-Waste next Monday to get 2x Eco-Credits.</p>
+                    </div>
+                </div>
+            </div>
         </div>
       </main>
-      <button onClick={() => setShowRecycleModal(true)} className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-emerald-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 active:scale-95 transition-transform"><Plus size={28}/></button>
+
+      {/* NEW ENTRY MODAL */}
+      {showNewEntry && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
+                <button onClick={() => setShowNewEntry(false)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500"><XCircle/></button>
+                <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-2"><Leaf className="text-emerald-500"/> Recycle</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Type</label>
+                        <select name="type" className="w-full border-2 border-slate-100 rounded-xl p-3 font-bold mt-1">
+                            <option>Plastic</option><option>Paper</option><option>E-Waste</option><option>Tin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Weight (KG)</label>
+                        <input name="weight" type="number" step="0.1" className="w-full border-2 border-slate-100 rounded-xl p-3 font-bold mt-1" required/>
+                    </div>
+                    <button disabled={loading} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition-colors">
+                        {loading ? "Submitting..." : "Submit Entry"}
+                    </button>
+                </form>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// 4. ADMIN DASHBOARD (SHOW EMAIL)
-function AdminDashboard({ txt, currentUser, dbRequests, fetchRequests, newsList, setNewsList }) {
+// 4. ADMIN DASHBOARD (SIMPLE)
+function AdminDashboard({ currentUser, fetchRequests, dbRequests }) {
   const navigate = useNavigate();
-  const [adminSection, setAdminSection] = useState('requests');
-  useEffect(() => { if (!currentUser) navigate('/login'); }, [currentUser, navigate]);
-  if (!currentUser) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-emerald-600"/></div>;
+  useEffect(() => { if(currentUser?.role !== 'admin') navigate('/login'); }, [currentUser, navigate]);
 
-  const handleAdminAction = async (id, action) => {
-    const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
-    try { const { error } = await supabase.from('requests').update({ status: newStatus }).eq('id', id); if (error) throw error; fetchRequests(); } catch (error) { alert("Error: " + error.message); }
-  };
-  const handlePostNews = (e) => { e.preventDefault(); const newPost = { id: Date.now(), title: e.target.title.value, content: e.target.content.value, date: new Date().toISOString().split('T')[0] }; setNewsList([newPost, ...newsList]); e.target.reset(); };
-  const handleDeleteNews = (id) => setNewsList(newsList.filter(n => n.id !== id));
-  
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col md:flex-row relative overflow-hidden">
-      <aside className="hidden md:flex w-64 flex-col p-6 bg-[#0f172a] border-r border-slate-800 sticky top-0 h-screen z-20 shadow-2xl"><div className="flex items-center gap-3 text-emerald-400 font-black text-lg mb-10 tracking-tight z-10"><LayoutDashboard size={20}/> ADMIN OS</div><nav className="space-y-2 flex-1 z-10"><button onClick={() => setAdminSection('requests')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${adminSection === 'requests' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}><ClipboardList size={18}/> {txt.manageReq}</button><button onClick={() => setAdminSection('news')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${adminSection === 'news' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}><Megaphone size={18}/> {txt.announcements}</button></nav><button onClick={() => navigate('/')} className="flex items-center gap-3 text-red-400 hover:bg-red-900/20 p-4 rounded-xl font-bold transition-all z-10 text-sm"><LogOut size={18}/> {txt.logout}</button></aside>
-      <div className="md:hidden bg-[#0f172a] p-4 flex justify-between items-center text-white sticky top-0 z-30"><div className="font-black text-emerald-400 flex items-center gap-2"><LayoutDashboard size={18}/> ADMIN</div><button onClick={() => navigate('/')}><LogOut size={18} className="text-red-400"/></button></div>
-      <main className="flex-1 p-4 md:p-10 overflow-y-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-8"><div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 className="text-2xl md:text-3xl font-black text-slate-800">{dbRequests.length}</h4><p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Requests</p></div><div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 className="text-2xl md:text-3xl font-black text-slate-800">450kg</h4><p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase">Mass</p></div></div>
-        <div className="md:hidden flex bg-white p-1 rounded-xl mb-6 shadow-sm border border-slate-100"><button onClick={() => setAdminSection('requests')} className={`flex-1 py-2 rounded-lg font-bold text-xs ${adminSection === 'requests' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500'}`}>{txt.manageReq}</button><button onClick={() => setAdminSection('news')} className={`flex-1 py-2 rounded-lg font-bold text-xs ${adminSection === 'news' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500'}`}>{txt.announcements}</button></div>
-        {adminSection === 'requests' && (
-          <div className="bg-white rounded-[1.5rem] border border-slate-200 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto"><table className="w-full text-left min-w-[600px] md:min-w-full"><thead className="bg-slate-50 text-slate-400 text-[10px] md:text-xs uppercase font-bold tracking-wider"><tr><th className="p-4 md:p-6">User Info</th><th className="p-4 md:p-6">Waste Data</th><th className="p-4 md:p-6">Status</th><th className="p-4 md:p-6 text-right">Action</th></tr></thead><tbody className="divide-y divide-slate-100 text-sm">{dbRequests.length === 0 ? (<tr><td colSpan="4" className="p-6 text-center text-slate-400">No requests found.</td></tr>) : (dbRequests.map((req) => (<tr key={req.id} className="hover:bg-slate-50"><td className="p-4 md:p-6"><span className="font-bold text-slate-800 block">{req.student}</span><span className="text-xs text-blue-500 font-medium bg-blue-50 px-2 py-0.5 rounded-full mt-1 inline-block">{req.email || "No Email"}</span></td><td className="p-4 md:p-6"><span className="block font-bold">{req.type}</span><span className="text-xs text-slate-500">{req.weight} • {req.location} • {req.points}pts</span></td><td className="p-4 md:p-6"><span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${req.status === 'Pending' ? 'bg-orange-100 text-orange-600' : req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>{req.status}</span></td><td className="p-4 md:p-6 text-right space-x-2">{req.status === 'Pending' && (<><button onClick={() => handleAdminAction(req.id, 'reject')} className="p-2 bg-red-50 text-red-500 rounded-lg"><XCircle size={16}/></button><button onClick={() => handleAdminAction(req.id, 'approve')} className="p-2 bg-emerald-500 text-white rounded-lg"><CheckCircle size={16}/></button></>)}</td></tr>)))}</tbody></table></div>
-          </div>
-        )}
-        {adminSection === 'news' && (
-           <div className="space-y-6"><div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm"><h3 className="font-bold text-blue-600 mb-4 text-sm uppercase tracking-wide">Post Update</h3><form onSubmit={handlePostNews} className="space-y-4"><input name="title" required type="text" placeholder={txt.titlePlaceholder} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold outline-none focus:border-blue-400"/><textarea name="content" required placeholder={txt.contentPlaceholder} rows="3" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-medium outline-none focus:border-blue-400"></textarea><button className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg active:scale-95 text-sm">{txt.postBtn}</button></form></div>{newsList.map(news => (<div key={news.id} className="bg-white border border-slate-200 p-5 rounded-2xl flex justify-between items-start"><div><h4 className="font-bold text-slate-800 mb-1">{news.title}</h4><p className="text-slate-500 text-xs">{news.content}</p></div><button onClick={() => handleDeleteNews(news.id)} className="text-slate-300 hover:text-red-500"><Trash2 size={16}/></button></div>))}</div>
-        )}
-      </main>
+    <div className="min-h-screen bg-slate-900 text-white p-10">
+        <h1 className="text-3xl font-black mb-10 flex items-center gap-3"><LayoutDashboard className="text-emerald-400"/> Admin Command Center</h1>
+        <div className="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700">
+            <table className="w-full text-left">
+                <thead className="bg-slate-950 text-slate-400 text-xs uppercase">
+                    <tr><th className="p-4">User</th><th className="p-4">Type</th><th className="p-4">Status</th></tr>
+                </thead>
+                <tbody>
+                    {dbRequests.map(req => (
+                        <tr key={req.id} className="border-t border-slate-700">
+                            <td className="p-4">{req.student}</td>
+                            <td className="p-4">{req.type} ({req.weight})</td>
+                            <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${req.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-orange-500/20 text-orange-400'}`}>{req.status}</span></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+        <button onClick={() => navigate('/')} className="mt-8 text-slate-400 hover:text-white flex items-center gap-2"><LogOut size={16}/> Logout</button>
     </div>
   );
-}
-
-function NotFoundPage({ txt }) {
-  const navigate = useNavigate();
-  return (<div className="min-h-screen bg-[#F0FDF4] flex flex-col items-center justify-center text-center p-6"><h1 className="text-9xl font-black text-emerald-200">404</h1><p className="text-emerald-800 font-bold mb-6">{txt.notFoundDesc}</p><button onClick={() => navigate('/')} className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg">{txt.goHome}</button></div>);
 }
