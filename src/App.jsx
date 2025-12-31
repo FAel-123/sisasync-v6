@@ -54,7 +54,7 @@ const LANG = {
     fee: "Fee",
     bonus: "Bonus",
     aboutTitle: "Who We Are",
-    aboutDesc: "We provide seamless pickup services and recyclables drop-off points across campus.",
+    aboutDesc: "We provide seamless pickup services and recyclables drop-off points.",
     cat1: "Pickup Service",
     desc1: "We come to your doorstep to collect heavy recyclables.",
     cat2: "Merchandise",
@@ -102,7 +102,7 @@ const LANG = {
     fee: "Caj",
     bonus: "Bonus",
     aboutTitle: "Tentang Kami",
-    aboutDesc: "Servis kutipan dan pusat pengumpulan barangan kitar semula di seluruh kampus.",
+    aboutDesc: "Servis kutipan dan pusat pengumpulan.",
     cat1: "Servis Kutipan",
     desc1: "Kami datang ke pintu anda untuk mengutip barang.",
     cat2: "Cenderamata",
@@ -191,6 +191,7 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
     if (evs.data && evs.data.length > 0) {
         setDbEvents(evs.data);
     } else {
+        // Fallback for demo
         setDbEvents([
             { id: 1, title: "Tree Planting", date: "2024-02-01", loc: "Eco Park", participants: 89, zoom_enabled: true, img: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=800&auto=format&fit=crop" },
             { id: 2, title: "E-Waste Fix", date: "2024-01-20", loc: "Main Hall", participants: 15, zoom_enabled: false, img: "https://images.unsplash.com/photo-1591485423070-4859c43910da?q=80&w=800&auto=format&fit=crop" },
@@ -481,20 +482,28 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
   // IMAGE UPLOAD LOGIC
   const handleImageUpload = async (e) => {
       try {
+          // SAFETY CHECK 1: Ensure files exist
+          if (!e.target.files || e.target.files.length === 0) return;
+
           setUploading(true);
           const file = e.target.files[0];
+          
+          // SAFETY CHECK 2: Ensure file object is valid
+          if (!file) throw new Error("No file selected");
+
           const fileExt = file.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
           const filePath = `${fileName}`;
 
+          // UPLOAD TO 'images' BUCKET (LowerCase)
           let { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
           if (uploadError) throw uploadError;
 
           const { data } = supabase.storage.from('images').getPublicUrl(filePath);
           setEventForm({ ...eventForm, img: data.publicUrl });
-          alert("Image uploaded!");
+          alert("Image uploaded successfully!");
       } catch (error) {
-          alert("Upload failed (Check Supabase Bucket Policies): " + error.message);
+          alert("Upload failed! Did you set the Bucket Policy? Error: " + error.message);
       } finally {
           setUploading(false);
       }
@@ -508,11 +517,16 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
       setEventForm({ title: '', date: '', loc: '', img: null, zoom_enabled: false }); 
   };
   
-  // DELETE FUNCTION
+  // --- NEW: DELETE EVENT FEATURE ---
   const handleDeleteEvent = async (id) => {
-      if(window.confirm("Are you sure you want to delete this event?")) {
+      if(window.confirm("Are you sure you want to delete this event? This cannot be undone.")) {
           const { error } = await supabase.from('events').delete().eq('id', id);
-          if(error) alert("Error: " + error.message); else { alert("Event deleted."); fetchData(); }
+          if(error) {
+              alert("Error deleting event: " + error.message);
+          } else {
+              alert("Event deleted successfully.");
+              fetchData(); // Refresh list immediately
+          }
       }
   };
 
@@ -551,9 +565,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                 <div className="space-y-6">
                     {/* FLUID RESPONSIVE GRID FIX */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><div><p className="text-xs font-bold uppercase opacity-60">Total Users</p><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div>
-                        <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><div><p className="text-xs font-bold uppercase opacity-60">Total Funding</p><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div>
-                        <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex items-center gap-4"><div className="p-3 bg-orange-100 text-orange-600 rounded-xl"><AlertCircle size={24}/></div><div><p className="text-xs font-bold uppercase opacity-60">Pending Req</p><h3 className="text-3xl font-black">{pendingCount}</h3></div></div></div>
+                        <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Users</p><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div>
+                        <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Funding</p><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div>
+                        <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Pending Req</p><div className="flex items-center gap-4"><div className="p-3 bg-orange-100 text-orange-600 rounded-xl"><AlertCircle size={24}/></div><h3 className="text-3xl font-black">{pendingCount}</h3></div></div></div>
                     </div>
                     <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                         <h3 className="font-bold mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-emerald-500"/> Funding History</h3>
@@ -622,7 +636,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {dbEvents.map(ev => (
                             <div key={ev.id} className={`p-4 rounded-xl border shadow-sm relative group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                                <button onClick={() => handleDeleteEvent(ev.id)} className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"><Trash2 size={14}/></button>
+                                {/* DELETE BUTTON */}
+                                <button onClick={() => handleDeleteEvent(ev.id)} className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"><Trash2 size={14}/></button>
+                                
                                 <div className="h-32 overflow-hidden rounded-lg mb-3 relative">
                                     <img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover"/>
                                     {ev.zoom_enabled && <div className="absolute bottom-2 right-2 bg-black/60 text-white p-1 rounded-md"><Eye size={12}/></div>}
