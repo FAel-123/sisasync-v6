@@ -10,7 +10,7 @@ import {
   ShieldCheck, Key, TrendingUp, AlertCircle, Heart,
   Moon, Sun, Globe, Truck, Package, Menu, X, Eye, 
   Image as ImageIcon, Upload, FlaskConical, AlertTriangle,
-  QrCode, Copy, Check
+  QrCode, Copy, Check, ShoppingBag
 } from 'lucide-react';
 
 // IMPORT SUPABASE
@@ -38,6 +38,49 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, isDark }) =>
       </div>
     </div>
   );
+};
+
+const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark }) => {
+    if (!isOpen || !reward) return null;
+    const canAfford = userPoints >= reward.cost;
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleConfirm = () => {
+        setIsProcessing(true);
+        onConfirm(reward);
+        // Parent component akan handle tutup modal lepas data refresh
+        setTimeout(() => setIsProcessing(false), 2000); 
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 px-4">
+            <div className={`w-full max-w-sm p-6 rounded-3xl shadow-2xl relative scale-100 animate-in zoom-in-95 duration-300 ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
+                <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
+                <div className="text-center mb-6 pt-4">
+                    <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${canAfford ? 'bg-orange-100 text-orange-500' : 'bg-slate-100 text-slate-400'}`}>
+                        <reward.icon size={40} className={canAfford ? 'animate-bounce' : ''} />
+                    </div>
+                    <h3 className="text-xl font-black">{reward.name}</h3>
+                    <p className="text-sm opacity-60 mt-1">Cost: <span className="font-bold">{reward.cost} pts</span></p>
+                </div>
+                {!canAfford && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-center text-xs font-bold mb-4 flex items-center justify-center gap-2">
+                        <AlertCircle size={14}/> Insufficient points ({userPoints} pts)
+                    </div>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                    <button onClick={onClose} className={`py-3 rounded-xl font-bold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>Cancel</button>
+                    <button 
+                        onClick={handleConfirm} 
+                        disabled={!canAfford || isProcessing}
+                        className={`py-3 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${!canAfford ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/30'}`}
+                    >
+                        {isProcessing ? <Loader2 className="animate-spin" size={18}/> : "Confirm Redeem"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const DonateModal = ({ isOpen, onClose, isDark }) => {
@@ -83,32 +126,8 @@ const REWARDS_DATA = [
 ];
 
 const LANG = {
-  en: {
-    heroTitle: "EDUCYCLE", heroDesc: "Transforming waste into education funds.", explore: "Explore Mission", access: "Login",
-    welcome: "Hi,", dashboard: "Dashboard", calculator: "Eco-Impact", newEntry: "Recycle Now", co2: "CO2 Removed",
-    energy: "Energy Saved", life: "Life Saved", rewards: "Rewards", available: "pts", events: "Events", join: "Join",
-    joined: "Joined", logs: "History", updates: "News", noEvents: "No events.", noLogs: "No history.",
-    redeemTitle: "Redeem", redeemConfirm: "Redeem reward", redeemSuccess: "SUCCESS!", locked: "LOCKED",
-    needMore: "Need more points.", admin: "Admin", logout: "Logout", pickup: "Requests", manageEvents: "Events",
-    postUpdate: "Update", adminPanel: "Admin Panel", selectMethod: "Delivery Method", methodPickup: "Pickup",
-    methodDropoff: "Drop-off", fee: "Fee", bonus: "Bonus", aboutTitle: "Who We Are",
-    aboutDesc: "We provide seamless pickup services and recyclables drop-off points.",
-    cat1: "Pickup Service", desc1: "Doorstep collection.", cat2: "Merchandise", desc2: "Eco-friendly products.",
-    cat3: "Programs", desc3: "Community events.", cat4: "Green R&D", desc4: "Sustainable innovation."
-  },
-  ms: {
-    heroTitle: "EDUCYCLE", heroDesc: "Mengubah sisa menjadi dana pendidikan.", explore: "Misi Kami", access: "Log Masuk",
-    welcome: "Hai,", dashboard: "Utama", calculator: "Impak", newEntry: "Kitar Semula", co2: "CO2 Disingkir",
-    energy: "Tenaga Dijimat", life: "Nyawa Selamat", rewards: "Ganjaran", available: "mata", events: "Acara",
-    join: "Sertai", joined: "Disertai", logs: "Sejarah", updates: "Berita", noEvents: "Tiada acara.", noLogs: "Tiada rekod.",
-    redeemTitle: "Tebus", redeemConfirm: "Tebus ganjaran", redeemsuccess: "BERJAYA!", locked: "KUNCI",
-    needMore: "Mata tak cukup.", admin: "Admin", logout: "Keluar", pickup: "Kutipan", manageEvents: "Acara",
-    postUpdate: "Berita", adminPanel: "Panel Admin", selectMethod: "Cara Serahan", methodPickup: "Kutipan",
-    methodDropoff: "Hantar", fee: "Caj", bonus: "Bonus", aboutTitle: "Tentang Kami",
-    aboutDesc: "Servis kutipan dan pusat pengumpulan.",
-    cat1: "Servis Kutipan", desc1: "Kutipan depan pintu.", cat2: "Cenderamata", desc2: "Barangan mesra alam.",
-    cat3: "Program Komuniti", desc3: "Acara komuniti.", cat4: "R&D Hijau", desc4: "Inovasi lestari."
-  }
+  en: { heroTitle: "EDUCYCLE", heroDesc: "Transforming waste into education funds.", explore: "Explore Mission", access: "Login", welcome: "Hi,", dashboard: "Dashboard", calculator: "Eco-Impact", newEntry: "Recycle Now", co2: "CO2 Removed", energy: "Energy Saved", life: "Life Saved", rewards: "Rewards", available: "pts", events: "Events", join: "Join", joined: "Joined", logs: "History", updates: "News", noEvents: "No events.", noLogs: "No history.", redeemTitle: "Redeem", redeemConfirm: "Redeem reward", redeemSuccess: "SUCCESS!", locked: "LOCKED", needMore: "Need more points.", admin: "Admin", logout: "Logout", pickup: "Requests", manageEvents: "Events", postUpdate: "Update", adminPanel: "Admin Panel", selectMethod: "Delivery Method", methodPickup: "Pickup", methodDropoff: "Drop-off", fee: "Fee", bonus: "Bonus", aboutTitle: "Who We Are", aboutDesc: "We provide seamless pickup services and recyclables drop-off points across campus.", cat1: "Pickup Service", desc1: "Doorstep collection.", cat2: "Merchandise", desc2: "Eco-friendly products.", cat3: "Programs", desc3: "Community events.", cat4: "Green R&D", desc4: "Sustainable innovation." },
+  ms: { heroTitle: "EDUCYCLE", heroDesc: "Mengubah sisa menjadi dana pendidikan.", explore: "Misi Kami", access: "Log Masuk", welcome: "Hai,", dashboard: "Utama", calculator: "Impak", newEntry: "Kitar Semula", co2: "CO2 Disingkir", energy: "Tenaga Dijimat", life: "Nyawa Selamat", rewards: "Ganjaran", available: "mata", events: "Acara", join: "Sertai", joined: "Disertai", logs: "Sejarah", updates: "Berita", noEvents: "Tiada acara.", noLogs: "Tiada rekod.", redeemTitle: "Tebus", redeemConfirm: "Tebus ganjaran", redeemsuccess: "BERJAYA!", locked: "KUNCI", needMore: "Mata tak cukup.", admin: "Admin", logout: "Keluar", pickup: "Kutipan", manageEvents: "Acara", postUpdate: "Berita", adminPanel: "Panel Admin", selectMethod: "Cara Serahan", methodPickup: "Kutipan", methodDropoff: "Hantar", fee: "Caj", bonus: "Bonus", aboutTitle: "Tentang Kami", aboutDesc: "Servis kutipan dan pusat pengumpulan barangan kitar semula.", cat1: "Servis Kutipan", desc1: "Kutipan depan pintu.", cat2: "Cenderamata", desc2: "Barangan mesra alam.", cat3: "Program Komuniti", desc3: "Acara komuniti.", cat4: "R&D Hijau", desc4: "Inovasi lestari." }
 };
 
 // --- MAIN APP ---
@@ -132,9 +151,13 @@ export default function App() {
     else localStorage.removeItem('educycle_user');
   };
 
-  const toggleLang = () => { const newLang = language === 'en' ? 'ms' : 'en'; setLanguage(newLang); localStorage.setItem('educycle_lang', newLang); };
-  const toggleTheme = () => { const newTheme = !isDark; setIsDark(newTheme); localStorage.setItem('educycle_theme', newTheme ? 'dark' : 'light'); };
-  const globalProps = { language, setLanguage: toggleLang, isDark, setIsDark: toggleTheme, t: language === 'en' ? LANG.en : LANG.ms };
+  const globalProps = { 
+    language, 
+    setLanguage: () => { const newLang = language === 'en' ? 'ms' : 'en'; setLanguage(newLang); localStorage.setItem('educycle_lang', newLang); }, 
+    isDark, 
+    setIsDark: () => { const newTheme = !isDark; setIsDark(newTheme); localStorage.setItem('educycle_theme', newTheme ? 'dark' : 'light'); }, 
+    t: language === 'en' ? LANG.en : LANG.ms 
+  };
 
   return (
     <Router>
@@ -148,19 +171,21 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
   const [dbRequests, setDbRequests] = useState([]);
   const [dbEvents, setDbEvents] = useState([]);
   const [dbNews, setDbNews] = useState([]);
+  const [dbRedemptions, setDbRedemptions] = useState([]);
   const [companyFund, setCompanyFund] = useState(3250); 
   const fundGoal = 5000;
-  
   const [joinedEventIds, setJoinedEventIds] = useState([]); 
 
   const refreshData = async () => {
     const reqs = await supabase.from('requests').select('*').order('id', { ascending: false });
     const evs = await supabase.from('events').select('*').order('id', { ascending: false });
     const news = await supabase.from('news').select('*').order('id', { ascending: false });
+    const redeems = await supabase.from('redemptions').select('*'); 
     
     if (reqs.data) setDbRequests(reqs.data);
     if (evs.data) setDbEvents(evs.data);
     if (news.data) setDbNews(news.data);
+    if (redeems.data) setDbRedemptions(redeems.data); 
 
     if (currentUser) {
         const { data: joinedData } = await supabase.from('event_participants').select('event_id').eq('student_email', currentUser.email);
@@ -170,9 +195,13 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
     }
   };
 
-  useEffect(() => { refreshData(); }, [currentUser]);
+  useEffect(() => {
+    refreshData();
+    const interval = setInterval(() => { refreshData(); }, 2000); 
+    return () => clearInterval(interval);
+  }, [currentUser]); 
 
-  const props = { currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, fetchRequests: refreshData, companyFund, fundGoal, language, setLanguage, isDark, setIsDark, t, joinedEventIds };
+  const props = { currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, fetchRequests: refreshData, companyFund, fundGoal, language, setLanguage, isDark, setIsDark, t, joinedEventIds };
 
   return (
     <Routes>
@@ -233,9 +262,7 @@ function LoginPage({ setCurrentUser, t, isDark }) {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
   const [isShaking, setIsShaking] = useState(false);
-  
   useEffect(() => { const saved = localStorage.getItem('educycle_user'); if (saved) navigate('/dashboard'); }, [navigate]);
-  
   const handleLogin = (e) => {
     e.preventDefault(); setLoading(true);
     setTimeout(() => { setLoading(false); if (formData.email.includes('@') && formData.username) { setCurrentUser({ name: formData.username, email: formData.email, role: 'user' }); navigate('/dashboard'); } else { alert("Invalid credentials."); } }, 1000);
@@ -265,7 +292,7 @@ function LoginPage({ setCurrentUser, t, isDark }) {
 }
 
 // 3. USER DASHBOARD
-function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, fetchRequests, companyFund, fundGoal, t, language, setLanguage, isDark, setIsDark, joinedEventIds }) {
+function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, fetchRequests, companyFund, fundGoal, t, language, setLanguage, isDark, setIsDark, joinedEventIds }) {
   const navigate = useNavigate();
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
@@ -274,23 +301,37 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   const [deliveryMethod, setDeliveryMethod] = useState('Pickup');
   const [expandedImage, setExpandedImage] = useState(null);
   const [toast, setToast] = useState(null);
+  
+  // -- REWARD STATE --
+  const [selectedReward, setSelectedReward] = useState(null);
 
   useEffect(() => { if (!currentUser) navigate('/login'); }, [currentUser, navigate]);
   if (!currentUser) return null;
+
+  // --- KIRA BAKI POINT (UPDATED) ---
   const myReqs = dbRequests.filter(r => r.student === currentUser.name && r.status === 'Approved');
-  const totalPoints = myReqs.reduce((acc, curr) => acc + (curr.points || 0), 0);
+  const totalEarned = myReqs.reduce((acc, curr) => acc + (curr.points || 0), 0);
+  
+  const myRedemptions = dbRedemptions ? dbRedemptions.filter(r => r.student_name === currentUser.name) : [];
+  const totalSpent = myRedemptions.reduce((acc, curr) => acc + (curr.cost || 0), 0);
+  
+  const totalPoints = totalEarned - totalSpent; // BAKI DALAM DOMPET
   const fundProgress = Math.min((companyFund / fundGoal) * 100, 100);
   
   const handleLogout = () => { setCurrentUser(null); navigate('/'); };
   const toggleSelection = (id) => { if (selectedTypes.includes(id)) { if (selectedTypes.length > 1) setSelectedTypes(selectedTypes.filter(t => t !== id)); } else { setSelectedTypes([...selectedTypes, id]); } };
-  const handleRedeem = (reward) => { if (totalPoints >= reward.cost) { setToast({message: `Redeemed ${reward.name}! Code sent.`, type: "success"}); } else { setToast({message: "Not enough points!", type: "error"}); } };
+  
+  const triggerRedeem = (reward) => { setSelectedReward(reward); };
+
+  const confirmRedeem = async (reward) => {
+      const { error } = await supabase.from('redemptions').insert([{ student_name: currentUser.name, reward_name: reward.name, cost: reward.cost }]);
+      if (!error) { setToast({message: `Redeemed ${reward.name}!`, type: "success"}); fetchRequests(); } 
+      else { setToast({message: "Redemption failed!", type: "error"}); }
+      setSelectedReward(null);
+  };
   
   const handleJoinEvent = async (ev) => { 
-      await supabase.from('event_participants').insert([{
-          event_id: ev.id,
-          student_name: currentUser.name,
-          student_email: currentUser.email
-      }]);
+      await supabase.from('event_participants').insert([{ event_id: ev.id, student_name: currentUser.name, student_email: currentUser.email }]);
       await supabase.from('events').update({ participants: (ev.participants || 0) + 1 }).eq('id', ev.id); 
       setToast({message: `Joined ${ev.title} successfully!`, type: "success"}); 
       fetchRequests(); 
@@ -313,6 +354,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
     <div className={`min-h-screen font-sans pb-20 ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <DonateModal isOpen={showDonate} onClose={() => setShowDonate(false)} isDark={isDark} />
+      <RedeemModal isOpen={!!selectedReward} onClose={() => setSelectedReward(null)} reward={selectedReward} userPoints={totalPoints} onConfirm={confirmRedeem} isDark={isDark} />
 
       <header className={`sticky top-0 z-40 shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} border-b`}>
         <div className="bg-[#0f172a] text-white py-3 px-6 group relative overflow-hidden transition-all hover:bg-slate-900"><div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"></div><div className="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 relative z-10"><div className="flex items-center gap-3"><div className="bg-emerald-500/20 p-2 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform"><BarChart3 size={20} className="text-emerald-400"/></div><div><p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Phase 1 Funding</p><h3 className="font-black text-lg text-white leading-none">SEED ROUND</h3></div></div><div className="flex-1 w-full max-w-2xl flex items-center gap-2"><div className="flex-1"><div className="flex justify-between text-[10px] font-bold mb-1 px-1"><span className="text-emerald-300">RM {companyFund.toLocaleString()}</span><span className="text-slate-500">Goal: RM {fundGoal.toLocaleString()}</span></div><div className="w-full bg-slate-800 h-3 md:h-4 rounded-full overflow-hidden border border-slate-700 shadow-[0_0_10px_rgba(16,185,129,0.15)] relative"><div className="bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-500 h-full rounded-full transition-all duration-1000 relative flex items-center justify-end pr-2" style={{width: `${fundProgress}%`}}><div className="absolute inset-0 w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:15px_15px] opacity-30 animate-[pulse_2s_infinite]"></div></div></div></div><button onClick={() => setShowDonate(true)} className="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-lg">Donate</button></div><div className="hidden md:block"><span className="bg-emerald-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-lg group-hover:scale-100 transition-transform inline-block">{Math.floor(fundProgress)}%</span></div></div></div>
@@ -321,13 +363,14 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className="lg:col-span-2 bg-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[250px]"><div className="relative z-10"><div className="flex justify-between items-start"><div><p className="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-1">{t.calculator}</p><h2 className="text-4xl md:text-5xl font-black">{totalPoints} <span className="text-sm font-medium opacity-70">pts</span></h2></div><button onClick={() => setShowNewEntry(true)} className="bg-white text-emerald-800 px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-emerald-50 active:scale-95 transition-all flex items-center gap-1"><Plus size={14}/> {t.newEntry}</button></div>
+            {/* --- IMPACT SECTION GUNA totalEarned (Supaya tak kurang bila redeem) --- */}
             <div className="grid grid-cols-3 gap-2 md:gap-3 mt-6">
-                <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><CloudRain className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalPoints * 0.12).toFixed(1)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.co2}</p><p className="text-[8px] opacity-70 mt-1 italic">~{(totalPoints * 0.05).toFixed(1)} km driven</p></div>
-                <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Zap className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalPoints * 0.5).toFixed(0)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.energy}</p><p className="text-[8px] opacity-70 mt-1 italic">~{Math.floor(totalPoints/20)} hrs light</p></div>
-                <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Fish className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{Math.floor(totalPoints / 100)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.life}</p><p className="text-[8px] opacity-70 mt-1 italic">Marine life saved</p></div>
+                <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><CloudRain className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.12).toFixed(1)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.co2}</p><p className="text-[8px] opacity-70 mt-1 italic">~{(totalEarned * 0.05).toFixed(1)} km driven</p></div>
+                <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Zap className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.5).toFixed(0)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.energy}</p><p className="text-[8px] opacity-70 mt-1 italic">~{Math.floor(totalEarned/20)} hrs light</p></div>
+                <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Fish className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{Math.floor(totalEarned / 100)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.life}</p><p className="text-[8px] opacity-70 mt-1 italic">Marine life saved</p></div>
             </div>
             </div><Leaf className="absolute -bottom-8 -right-8 text-emerald-500 w-48 h-48 opacity-20 rotate-12"/></div>
-            <div className={`rounded-2xl p-5 border shadow-sm flex flex-col h-[250px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex justify-between items-center mb-4"><h3 className="font-bold flex items-center gap-2 text-sm"><Gift className="text-orange-500" size={18}/> {t.rewards}</h3><span className="text-xs font-bold opacity-60">{totalPoints} {t.available}</span></div><div className="flex-1 overflow-y-auto space-y-3 pr-1">{REWARDS_DATA.map(r => (<div key={r.id} onClick={() => handleRedeem(r)} className={`flex items-center justify-between p-3 rounded-xl border transition-colors cursor-pointer group ${isDark ? 'bg-slate-700 border-slate-600 hover:border-emerald-500' : 'bg-slate-50 border-slate-100 hover:border-emerald-200 hover:bg-emerald-50'}`}><div className="flex items-center gap-3"><div className={`p-2 rounded-lg shadow-sm ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-600'} group-hover:text-emerald-500`}><r.icon size={16}/></div><div><p className="font-bold text-xs md:text-sm">{r.name}</p><p className="text-[10px] font-bold opacity-60">{r.cost} pts</p></div></div><ChevronRight size={16} className="opacity-40 group-hover:text-emerald-500 group-hover:opacity-100"/></div>))}</div></div>
+            <div className={`rounded-2xl p-5 border shadow-sm flex flex-col h-[250px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex justify-between items-center mb-4"><h3 className="font-bold flex items-center gap-2 text-sm"><Gift className="text-orange-500" size={18}/> {t.rewards}</h3><span className="text-xs font-bold opacity-60">{totalPoints} {t.available}</span></div><div className="flex-1 overflow-y-auto space-y-3 pr-1">{REWARDS_DATA.map(r => (<div key={r.id} onClick={() => triggerRedeem(r)} className={`flex items-center justify-between p-3 rounded-xl border transition-colors cursor-pointer group ${isDark ? 'bg-slate-700 border-slate-600 hover:border-emerald-500' : 'bg-slate-50 border-slate-100 hover:border-emerald-200 hover:bg-emerald-50'}`}><div className="flex items-center gap-3"><div className={`p-2 rounded-lg shadow-sm ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-600'} group-hover:text-emerald-500`}><r.icon size={16}/></div><div><p className="font-bold text-xs md:text-sm">{r.name}</p><p className="text-[10px] font-bold opacity-60">{r.cost} pts</p></div></div><ChevronRight size={16} className="opacity-40 group-hover:text-emerald-500 group-hover:opacity-100"/></div>))}</div></div>
         </div>
         <div className="mb-6"><h3 className="text-lg font-bold mb-3 flex items-center gap-2"><Calendar className="text-blue-500" size={18}/> {t.events}</h3>
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
@@ -342,21 +385,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
                         <p className="text-[10px] opacity-60 flex items-center gap-1 mb-3"><MapPin size={10}/> {ev.loc}</p>
                         <div className="flex items-center justify-between mt-3">
                             <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500"><Users size={12}/> {ev.participants || 0}</span>
-                            
-                            {/* --- SMART JOIN BUTTON --- */}
-                            <button 
-                                onClick={() => !isJoined && handleJoinEvent(ev)} 
-                                disabled={isJoined}
-                                className={`px-4 py-1.5 border rounded-lg text-[10px] font-bold transition-all ${
-                                    isJoined 
-                                    ? 'bg-emerald-100 text-emerald-600 border-emerald-200 cursor-default shadow-inner' 
-                                    : isDark 
-                                        ? 'border-slate-600 hover:bg-emerald-600 hover:border-emerald-600 text-slate-300 hover:text-white' 
-                                        : 'border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 bg-slate-50'
-                                }`}
-                            >
-                                {isJoined ? 'Joined ✓' : t.join}
-                            </button>
+                            <button onClick={() => !isJoined && handleJoinEvent(ev)} disabled={isJoined} className={`px-4 py-1.5 border rounded-lg text-[10px] font-bold transition-all ${isJoined ? 'bg-emerald-100 text-emerald-600 border-emerald-200 cursor-default shadow-inner' : isDark ? 'border-slate-600 hover:bg-emerald-600 hover:border-emerald-600 text-slate-300 hover:text-white' : 'border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 bg-slate-50'}`}>{isJoined ? 'Joined ✓' : t.join}</button>
                         </div>
                     </div>
                 </div>
