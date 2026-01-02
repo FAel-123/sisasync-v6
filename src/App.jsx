@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+// PENTING: Tukar BrowserRouter ke HashRouter untuk elak 404 bila refresh
+import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { 
   Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
   LogOut, Plus, CheckCircle, XCircle, MapPin, Loader2, 
@@ -48,7 +49,6 @@ const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark })
     const handleConfirm = () => {
         setIsProcessing(true);
         onConfirm(reward);
-        // Parent component akan handle tutup modal lepas data refresh
         setTimeout(() => setIsProcessing(false), 2000); 
     };
 
@@ -195,11 +195,14 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
     }
   };
 
+  // --- GLOBAL AUTO REFRESH (JANTUNG APLIKASI) ---
+  // Ini akan pastikan SEMUA data (News, Events, Requests) update serentak setiap 2 saat
+  // Tak kira awak kat page mana pun.
   useEffect(() => {
     refreshData();
-    const interval = setInterval(() => { refreshData(); }, 2000); 
+    const interval = setInterval(() => { refreshData(); }, 2000); // 2000ms = 2 Saat
     return () => clearInterval(interval);
-  }, [currentUser]); 
+  }, [currentUser]); // Re-run jika user bertukar
 
   const props = { currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, fetchRequests: refreshData, companyFund, fundGoal, language, setLanguage, isDark, setIsDark, t, joinedEventIds };
 
@@ -425,9 +428,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(() => { if (activeTab === 'requests' || activeTab === 'overview') fetchData(); }, 2000);
+    const interval = setInterval(() => { fetchData(); }, 2000); // REFRESH SEMUA SETIAP 2 SAAT
     return () => clearInterval(interval);
-  }, [activeTab]);
+  }, []);
 
   const handleStatus = async (id, status) => { await supabase.from('requests').update({ status }).eq('id', id); setToast({message: `Status updated to ${status}`, type: "success"}); fetchData(); };
   
