@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Guna HashRouter supaya refresh di phone tak error 404
+// HashRouter: Fix 404 on refresh di phone
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { 
   Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
@@ -11,7 +11,7 @@ import {
   ShieldCheck, Key, TrendingUp, AlertCircle, Heart,
   Moon, Sun, Globe, Truck, Package, Menu, X, Eye, 
   Image as ImageIcon, Upload, FlaskConical, AlertTriangle,
-  QrCode, Copy, Check, ShoppingBag
+  QrCode, Copy, Check, ShoppingBag, Clock, Info, Star 
 } from 'lucide-react';
 
 // IMPORT SUPABASE
@@ -83,6 +83,73 @@ const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark })
     );
 };
 
+// --- ECO-CUBE MODAL ---
+const EcoCubeModal = ({ isOpen, onClose, isDark }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in px-4">
+            <div className={`w-full max-w-lg p-6 rounded-3xl shadow-2xl relative ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
+                <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="bg-emerald-500 p-3 rounded-xl text-white shadow-lg"><Package size={24}/></div>
+                    <div><h3 className="text-2xl font-black">Eco-Cube</h3><p className="text-sm opacity-60">Toiletries Collection Service</p></div>
+                </div>
+                <div className={`p-4 rounded-xl mb-4 ${isDark ? 'bg-slate-800' : 'bg-emerald-50'}`}>
+                    <p className="text-sm leading-relaxed"><span className="font-bold text-emerald-500">What we collect:</span> Shampoo bottles, body wash containers, plastic tubes, and other bathroom plastics.</p>
+                </div>
+                <h4 className="font-bold mb-3 flex items-center gap-2"><Clock size={16}/> Weekly Schedule</h4>
+                <div className={`rounded-xl border overflow-hidden mb-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                    <table className="w-full text-sm text-left">
+                        <thead className={isDark ? 'bg-slate-800' : 'bg-slate-50'}><tr><th className="p-3">Location</th><th className="p-3">Day</th><th className="p-3">Time</th></tr></thead>
+                        <tbody className="divide-y opacity-90">
+                            <tr><td className="p-3">Hostel Block A</td><td className="p-3">Mon & Thu</td><td className="p-3 font-bold text-emerald-500">5:00 PM</td></tr>
+                            <tr><td className="p-3">Hostel Block B</td><td className="p-3">Tue & Fri</td><td className="p-3 font-bold text-emerald-500">5:00 PM</td></tr>
+                            <tr><td className="p-3">Student Cafe</td><td className="p-3">Wednesday</td><td className="p-3 font-bold text-emerald-500">1:00 PM</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button onClick={onClose} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg">Got it!</button>
+            </div>
+        </div>
+    );
+};
+
+// --- SHOP MODAL ---
+const ShopModal = ({ isOpen, onClose, products, isDark }) => {
+    const [purchasing, setPurchasing] = useState(null);
+    if (!isOpen) return null;
+    const handleBuy = (id) => {
+        setPurchasing(id);
+        setTimeout(async () => {
+            const product = products.find(p => p.id === id);
+            await supabase.from('products').update({ sold: (product.sold || 0) + 1 }).eq('id', id);
+            setPurchasing(null);
+            alert("Thank you! Order placed.");
+        }, 1000);
+    };
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in px-4">
+            <div className={`w-full max-w-2xl p-6 rounded-3xl shadow-2xl relative max-h-[85vh] flex flex-col ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
+                <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
+                <div className="flex items-center gap-3 mb-6"><div className="bg-orange-500 p-3 rounded-xl text-white shadow-lg"><ShoppingBag size={24}/></div><div><h3 className="text-2xl font-black">Recycle Shop</h3><p className="text-sm opacity-60">Support our green initiative.</p></div></div>
+                <div className="overflow-y-auto flex-1 pr-2">
+                    {products.length === 0 ? <p className="text-center py-20 opacity-50 italic">No items on the shelf yet.</p> : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {products.map(p => (
+                                <div key={p.id} className={`p-3 rounded-xl border flex flex-col ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+                                    <div className="h-32 bg-slate-200 rounded-lg mb-3 overflow-hidden"><img src={p.img} className="w-full h-full object-cover"/></div>
+                                    <h4 className="font-bold text-sm truncate">{p.name}</h4>
+                                    <div className="flex justify-between items-end mt-auto pt-2"><div><p className="text-xs opacity-60">{p.sold || 0} sold</p><p className="text-emerald-500 font-black text-sm">{p.price}</p></div><button onClick={() => handleBuy(p.id)} className="bg-emerald-500 text-white p-2 rounded-lg hover:bg-emerald-600 transition-colors">{purchasing === p.id ? <Loader2 size={16} className="animate-spin"/> : <ShoppingBag size={16}/>}</button></div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const DonateModal = ({ isOpen, onClose, isDark }) => {
   const [copied, setCopied] = useState(false);
   if (!isOpen) return null;
@@ -117,7 +184,6 @@ const ParticipantsModal = ({ isOpen, onClose, participants, isDark }) => {
     );
 };
 
-// --- DATA CONSTANTS ---
 const REWARDS_DATA = [
   { id: 'r1', name: "RM5 Voucher", cost: 500, icon: Gift },
   { id: 'r2', name: "Notebook", cost: 1200, icon: BookOpen },
@@ -173,6 +239,7 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
   const [dbEvents, setDbEvents] = useState([]);
   const [dbNews, setDbNews] = useState([]);
   const [dbRedemptions, setDbRedemptions] = useState([]);
+  const [dbProducts, setDbProducts] = useState([]); 
   const [companyFund, setCompanyFund] = useState(3250); 
   const fundGoal = 5000;
   const [joinedEventIds, setJoinedEventIds] = useState([]); 
@@ -182,11 +249,13 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
     const evs = await supabase.from('events').select('*').order('id', { ascending: false });
     const news = await supabase.from('news').select('*').order('id', { ascending: false });
     const redeems = await supabase.from('redemptions').select('*'); 
+    const prods = await supabase.from('products').select('*').order('id', { ascending: false });
     
     if (reqs.data) setDbRequests(reqs.data);
     if (evs.data) setDbEvents(evs.data);
     if (news.data) setDbNews(news.data);
     if (redeems.data) setDbRedemptions(redeems.data); 
+    if (prods.data) setDbProducts(prods.data || []); 
 
     if (currentUser) {
         const { data: joinedData } = await supabase.from('event_participants').select('event_id').eq('student_email', currentUser.email);
@@ -196,14 +265,13 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
     }
   };
 
-  // --- GLOBAL AUTO REFRESH (JANTUNG APLIKASI) ---
   useEffect(() => {
     refreshData();
     const interval = setInterval(() => { refreshData(); }, 2000); 
     return () => clearInterval(interval);
   }, [currentUser]); 
 
-  const props = { currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, fetchRequests: refreshData, companyFund, fundGoal, language, setLanguage, isDark, setIsDark, t, joinedEventIds };
+  const props = { currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, dbProducts, fetchRequests: refreshData, companyFund, fundGoal, language, setLanguage, isDark, setIsDark, t, joinedEventIds };
 
   return (
     <Routes>
@@ -294,10 +362,13 @@ function LoginPage({ setCurrentUser, t, isDark }) {
 }
 
 // 3. USER DASHBOARD
-function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, fetchRequests, companyFund, fundGoal, t, language, setLanguage, isDark, setIsDark, joinedEventIds }) {
+function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbRedemptions, dbProducts, fetchRequests, companyFund, fundGoal, t, language, setLanguage, isDark, setIsDark, joinedEventIds }) {
   const navigate = useNavigate();
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
+  const [showEcoCube, setShowEcoCube] = useState(false); // NEW MODAL STATE
+  const [showShop, setShowShop] = useState(false); // NEW MODAL STATE
+  
   const [loading, setLoading] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState(['Plastic']);
   const [deliveryMethod, setDeliveryMethod] = useState('Pickup');
@@ -351,6 +422,10 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <DonateModal isOpen={showDonate} onClose={() => setShowDonate(false)} isDark={isDark} />
       <RedeemModal isOpen={!!selectedReward} onClose={() => setSelectedReward(null)} reward={selectedReward} userPoints={totalPoints} onConfirm={confirmRedeem} isDark={isDark} />
+      
+      {/* NEW MODALS */}
+      <EcoCubeModal isOpen={showEcoCube} onClose={() => setShowEcoCube(false)} isDark={isDark} />
+      <ShopModal isOpen={showShop} onClose={() => setShowShop(false)} products={dbProducts} isDark={isDark} />
 
       <header className={`sticky top-0 z-40 shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} border-b`}>
         <div className="bg-[#0f172a] text-white py-3 px-6 group relative overflow-hidden transition-all hover:bg-slate-900"><div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"></div><div className="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 relative z-10"><div className="flex items-center gap-3"><div className="bg-emerald-500/20 p-2 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform"><BarChart3 size={20} className="text-emerald-400"/></div><div><p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Phase 1 Funding</p><h3 className="font-black text-lg text-white leading-none">SEED ROUND</h3></div></div><div className="flex-1 w-full max-w-2xl flex items-center gap-2"><div className="flex-1"><div className="flex justify-between text-[10px] font-bold mb-1 px-1"><span className="text-emerald-300">RM {companyFund.toLocaleString()}</span><span className="text-slate-500">Goal: RM {fundGoal.toLocaleString()}</span></div><div className="w-full bg-slate-800 h-3 md:h-4 rounded-full overflow-hidden border border-slate-700 shadow-[0_0_10px_rgba(16,185,129,0.15)] relative"><div className="bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-500 h-full rounded-full transition-all duration-1000 relative flex items-center justify-end pr-2" style={{width: `${fundProgress}%`}}><div className="absolute inset-0 w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:15px_15px] opacity-30 animate-[pulse_2s_infinite]"></div></div></div></div><button onClick={() => setShowDonate(true)} className="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-lg">Donate</button></div><div className="hidden md:block"><span className="bg-emerald-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-lg group-hover:scale-100 transition-transform inline-block">{Math.floor(fundProgress)}%</span></div></div></div>
@@ -359,14 +434,30 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className="lg:col-span-2 bg-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[250px]"><div className="relative z-10"><div className="flex justify-between items-start"><div><p className="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-1">{t.calculator}</p><h2 className="text-4xl md:text-5xl font-black">{totalPoints} <span className="text-sm font-medium opacity-70">pts</span></h2></div><button onClick={() => setShowNewEntry(true)} className="bg-white text-emerald-800 px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-emerald-50 active:scale-95 transition-all flex items-center gap-1"><Plus size={14}/> {t.newEntry}</button></div>
+            {/* --- IMPACT SECTION --- */}
             <div className="grid grid-cols-3 gap-2 md:gap-3 mt-6">
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><CloudRain className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.12).toFixed(1)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.co2}</p><p className="text-[8px] opacity-70 mt-1 italic">~{(totalEarned * 0.05).toFixed(1)} km driven</p></div>
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Zap className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.5).toFixed(0)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.energy}</p><p className="text-[8px] opacity-70 mt-1 italic">~{Math.floor(totalEarned/20)} hrs light</p></div>
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Fish className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{Math.floor(totalEarned / 100)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.life}</p><p className="text-[8px] opacity-70 mt-1 italic">Marine life saved</p></div>
             </div>
             </div><Leaf className="absolute -bottom-8 -right-8 text-emerald-500 w-48 h-48 opacity-20 rotate-12"/></div>
+            
+            {/* --- REWARDS (KEMBALI DI SINI) --- */}
             <div className={`rounded-2xl p-5 border shadow-sm flex flex-col h-[250px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex justify-between items-center mb-4"><h3 className="font-bold flex items-center gap-2 text-sm"><Gift className="text-orange-500" size={18}/> {t.rewards}</h3><span className="text-xs font-bold opacity-60">{totalPoints} {t.available}</span></div><div className="flex-1 overflow-y-auto space-y-3 pr-1">{REWARDS_DATA.map(r => (<div key={r.id} onClick={() => triggerRedeem(r)} className={`flex items-center justify-between p-3 rounded-xl border transition-colors cursor-pointer group ${isDark ? 'bg-slate-700 border-slate-600 hover:border-emerald-500' : 'bg-slate-50 border-slate-100 hover:border-emerald-200 hover:bg-emerald-50'}`}><div className="flex items-center gap-3"><div className={`p-2 rounded-lg shadow-sm ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-600'} group-hover:text-emerald-500`}><r.icon size={16}/></div><div><p className="font-bold text-xs md:text-sm">{r.name}</p><p className="text-[10px] font-bold opacity-60">{r.cost} pts</p></div></div><ChevronRight size={16} className="opacity-40 group-hover:text-emerald-500 group-hover:opacity-100"/></div>))}</div></div>
         </div>
+
+        {/* --- EXTRA SERVICES ROW (BARU DI BAWAH) --- */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div onClick={() => setShowEcoCube(true)} className={`p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-slate-200 hover:bg-emerald-50 shadow-sm'}`}>
+                <div className="bg-emerald-100 p-3 rounded-full"><Package size={24} className="text-emerald-600"/></div>
+                <div><span className="font-bold text-sm block">Eco-Cube</span><span className="text-[10px] opacity-60">Toiletries Box</span></div>
+            </div>
+            <div onClick={() => setShowShop(true)} className={`p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-slate-200 hover:bg-orange-50 shadow-sm'}`}>
+                <div className="bg-orange-100 p-3 rounded-full"><ShoppingBag size={24} className="text-orange-600"/></div>
+                <div><span className="font-bold text-sm block">Recycle Shop</span><span className="text-[10px] opacity-60">Merchandise</span></div>
+            </div>
+        </div>
+
         <div className="mb-6"><h3 className="text-lg font-bold mb-3 flex items-center gap-2"><Calendar className="text-blue-500" size={18}/> {t.events}</h3>
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
             {dbEvents.length === 0 ? <p className="text-sm opacity-50">{t.noEvents}</p> : dbEvents.map(ev => {
@@ -403,25 +494,25 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
 }
 
 // 4. ADMIN DASHBOARD
-function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, fetchData, companyFund, t, language, setLanguage, isDark, setIsDark }) {
+function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbProducts, fetchData, companyFund, t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [eventForm, setEventForm] = useState({ title: '', date: '', loc: '', img: null, zoom_enabled: false });
+  
+  // -- NEW PRODUCT FORM STATE --
+  const [productForm, setProductForm] = useState({ name: '', price: '', img: null });
+
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // -- DELETE STATE (GENERIC: EVENTS / NEWS) --
-  const [deleteTarget, setDeleteTarget] = useState(null); // { id: 1, type: 'event' }
+  const [deleteTarget, setDeleteTarget] = useState(null); 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingIds, setDeletingIds] = useState([]);
-  
   const [viewParticipants, setViewParticipants] = useState(null);
   const [participantsList, setParticipantsList] = useState([]);
 
   useEffect(() => { if(currentUser?.role !== 'admin') navigate('/login'); }, [currentUser, navigate]);
 
-  // --- AGGRESSIVE POLLING (2 Saat Refresh) ---
   useEffect(() => {
     fetchData();
     const interval = setInterval(() => { fetchData(); }, 2000); 
@@ -436,7 +527,7 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
       setViewParticipants(eventId);
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, type = 'event') => {
       try {
           if (!e.target.files || e.target.files.length === 0) return;
           const file = e.target.files[0];
@@ -445,7 +536,10 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
           let { error: uploadError } = await supabase.storage.from('images').upload(fileName, file);
           if (uploadError) throw uploadError;
           const { data } = supabase.storage.from('images').getPublicUrl(fileName);
-          setEventForm({ ...eventForm, img: data.publicUrl });
+          
+          if(type === 'event') setEventForm({ ...eventForm, img: data.publicUrl });
+          else setProductForm({ ...productForm, img: data.publicUrl });
+
           setToast({message: "Image uploaded!", type: "success"});
       } catch (error) {
           setToast({message: "Upload failed: " + error.message, type: "error"});
@@ -470,29 +564,29 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
       e.target.reset(); 
   };
 
-  // --- GENERIC DELETE LOGIC ---
+  // -- NEW ADD PRODUCT FUNCTION --
+  const handleAddProduct = async (e) => {
+      e.preventDefault();
+      if (!productForm.img) return setToast({message: "Please upload product image!", type: "error"});
+      await supabase.from('products').insert([productForm]);
+      setToast({message: "Product Listed!", type: "success"});
+      fetchData();
+      setProductForm({ name: '', price: '', img: null });
+  };
+
   const confirmDelete = async () => {
       if(!deleteTarget) return;
       setIsDeleting(true);
-      
-      // Add visual animation
       setDeletingIds(prev => [...prev, deleteTarget.id]); 
       
-      const table = deleteTarget.type === 'event' ? 'events' : 'news';
+      let table = 'events';
+      if(deleteTarget.type === 'news') table = 'news';
+      if(deleteTarget.type === 'product') table = 'products'; // HANDLE PRODUCT DELETE
       
       setTimeout(async () => {
           const { error } = await supabase.from(table).delete().eq('id', deleteTarget.id);
-          
-          if(error) { 
-              setToast({message: "Delete failed!", type: "error"}); 
-              setDeletingIds(prev => prev.filter(id => id !== deleteTarget.id)); 
-          } 
-          else { 
-              setToast({message: `${deleteTarget.type === 'event' ? 'Event' : 'Announcement'} deleted.`, type: "success"}); 
-              fetchData(); 
-              setDeletingIds(prev => prev.filter(id => id !== deleteTarget.id)); 
-          }
-          
+          if(error) { setToast({message: "Delete failed!", type: "error"}); setDeletingIds(prev => prev.filter(id => id !== deleteTarget.id)); } 
+          else { setToast({message: "Deleted successfully.", type: "success"}); fetchData(); setDeletingIds(prev => prev.filter(id => id !== deleteTarget.id)); }
           setDeleteTarget(null);
           setIsDeleting(false);
       }, 500);
@@ -500,17 +594,17 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
 
   const totalUsers = new Set(dbRequests.map(r => r.student)).size;
   const pendingCount = dbRequests.filter(r => r.status === 'Pending').length;
+  const totalSales = dbProducts.reduce((acc, curr) => acc + (curr.sold || 0), 0); // SALES STATS
 
   return (
     <div className={`min-h-screen flex font-sans ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         
-        {/* --- DELETE CONFIRMATION MODAL --- */}
         <ConfirmModal 
             isOpen={!!deleteTarget} 
             onClose={() => setDeleteTarget(null)} 
             onConfirm={confirmDelete} 
-            title={`Delete ${deleteTarget?.type === 'event' ? 'Event' : 'Announcement'}?`} 
+            title="Delete Item?" 
             message="This action cannot be undone." 
             isDark={isDark} 
         />
@@ -524,18 +618,20 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                 <button onClick={() => { setActiveTab('requests'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'requests' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><ShieldCheck size={18}/> Requests <span className="bg-red-500 text-white text-[10px] px-2 rounded-full ml-auto">{pendingCount}</span></button>
                 <button onClick={() => { setActiveTab('events'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'events' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><Calendar size={18}/> Manage Events</button>
                 <button onClick={() => { setActiveTab('news'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'news' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><Megaphone size={18}/> Announcements</button>
+                {/* NEW MERCHANDISE TAB */}
+                <button onClick={() => { setActiveTab('merch'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'merch' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><ShoppingBag size={18}/> Merchandise</button>
             </nav>
             <div className="p-4"><button onClick={() => navigate('/')} className="w-full flex items-center gap-2 p-3 text-red-400 font-bold hover:bg-slate-800 rounded-xl transition-all"><LogOut size={18}/> Logout</button></div>
         </aside>
         <main className={`flex-1 p-4 md:p-10 transition-all duration-300 md:ml-64`}>
             <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-3"><button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"><Menu size={24}/></button><h2 className="text-2xl md:text-3xl font-black">{activeTab === 'overview' ? t.adminPanel : activeTab === 'requests' ? t.pickup : activeTab === 'events' ? t.manageEvents : t.updates}</h2></div>
+                <div className="flex items-center gap-3"><button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"><Menu size={24}/></button><h2 className="text-2xl md:text-3xl font-black">{activeTab === 'overview' ? t.adminPanel : activeTab === 'requests' ? t.pickup : activeTab === 'events' ? t.manageEvents : activeTab === 'news' ? t.updates : 'Merchandise'}</h2></div>
                 <div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} /><div className={`hidden md:flex px-4 py-2 rounded-full border font-bold text-sm items-center gap-2 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 text-slate-700'}`}><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Administrator</div></div>
             </div>
             <div className="">
-            {activeTab === 'overview' && (<div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Users</p><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Funding</p><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Pending Req</p><div className="flex items-center gap-4"><div className="p-3 bg-orange-100 text-orange-600 rounded-xl"><AlertCircle size={24}/></div><h3 className="text-3xl font-black">{pendingCount}</h3></div></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h3 className="font-bold mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-emerald-500"/> Funding History</h3><div className="space-y-3"><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Seed Round A</span><span className="text-emerald-500 font-black">+RM 2,000</span></div><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Angel Investor</span><span className="text-emerald-500 font-black">+RM 1,250</span></div></div></div></div>)}
+            {activeTab === 'overview' && (<div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Users</p><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Funding</p><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Sales</p><div className="flex items-center gap-4"><div className="p-3 bg-purple-100 text-purple-600 rounded-xl"><ShoppingBag size={24}/></div><h3 className="text-3xl font-black">{totalSales} <span className="text-sm font-medium opacity-50">items</span></h3></div></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h3 className="font-bold mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-emerald-500"/> Funding History</h3><div className="space-y-3"><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Seed Round A</span><span className="text-emerald-500 font-black">+RM 2,000</span></div><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Angel Investor</span><span className="text-emerald-500 font-black">+RM 1,250</span></div></div></div></div>)}
             {activeTab === 'requests' && (<div className={`rounded-2xl shadow-sm border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="overflow-x-auto"><table className="w-full text-left min-w-[600px]"><thead className={`text-xs uppercase ${isDark ? 'bg-slate-900 text-slate-400' : 'bg-slate-50 text-slate-400'}`}><tr><th className="p-4">Student</th><th className="p-4">Method</th><th className="p-4">Type</th><th className="p-4">Location</th><th className="p-4">Status</th><th className="p-4 text-right">Action</th></tr></thead><tbody className={`divide-y ${isDark ? 'divide-slate-700' : 'divide-slate-100'}`}>{dbRequests.map(req => (<tr key={req.id} className={`${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-50'} transition-colors`}><td className="p-4 font-bold">{req.student}</td><td className="p-4 text-sm opacity-80 flex items-center gap-2">{req.method === 'Drop-off' ? <Package size={14} className="text-purple-500"/> : <Truck size={14} className="text-blue-500"/>} {req.method || 'Pickup'}</td><td className="p-4 text-sm opacity-80">{req.type} ({req.weight})</td><td className="p-4 text-sm opacity-80">{req.location}</td><td className="p-4"><span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${req.status === 'Pending' ? 'bg-orange-100 text-orange-600' : req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>{req.status}</span></td><td className="p-4 text-right space-x-2 flex justify-end">{req.status === 'Pending' && (<><button onClick={() => handleStatus(req.id, 'Approved')} className="bg-emerald-500 text-white p-2 rounded-lg hover:bg-emerald-600"><CheckCircle size={16}/></button><button onClick={() => handleStatus(req.id, 'Rejected')} className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600"><XCircle size={16}/></button></>)}</td></tr>))}</tbody></table></div></div>)}
-            {activeTab === 'events' && (<div><div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h4 className="font-bold mb-4">Create New Event</h4><form onSubmit={handleAddEvent} className="grid grid-cols-1 md:grid-cols-2 gap-4"><input value={eventForm.title} onChange={e=>setEventForm({...eventForm, title: e.target.value})} placeholder="Event Title" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><input value={eventForm.date} onChange={e=>setEventForm({...eventForm, date: e.target.value})} placeholder="Date (e.g 25 Dec 2025)" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><div className="md:col-span-2"><label className={`block text-xs font-bold mb-2 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cover Image</label><div className={`relative border-2 border-dashed rounded-xl h-48 overflow-hidden transition-colors ${isDark ? 'border-slate-700 hover:border-emerald-500' : 'border-slate-300 hover:border-emerald-500'}`}><input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="fileUpload"/><label htmlFor="fileUpload" className="absolute inset-0 w-full h-full flex flex-col items-center justify-center cursor-pointer z-10">{eventForm.img ? (<div className="relative w-full h-full group"><img src={eventForm.img} className="w-full h-full object-cover" alt="Preview"/><div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><ImageIcon className="text-white mb-2" size={24}/><span className="text-white font-bold text-sm">Click to Change Image</span></div></div>) : (<div className="text-center"><div className="bg-emerald-500/10 p-3 rounded-full inline-block mb-3"><Upload className="text-emerald-500" size={24}/></div><span className={`block text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{uploading ? "Uploading..." : "Click Anywhere to Upload"}</span></div>)}</label></div></div><input value={eventForm.loc} onChange={e=>setEventForm({...eventForm, loc: e.target.value})} placeholder="Location" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 md:col-span-2 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><div className={`flex items-center justify-between p-3 border rounded-xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}><span className="text-sm font-bold opacity-70 flex items-center gap-2"><ImageIcon size={16}/> Allow Image Zoom?</span><button type="button" onClick={() => setEventForm({...eventForm, zoom_enabled: !eventForm.zoom_enabled})} className={`w-10 h-5 rounded-full relative transition-colors ${eventForm.zoom_enabled ? 'bg-emerald-500' : 'bg-slate-400'}`}><div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${eventForm.zoom_enabled ? 'left-6' : 'left-1'}`}></div></button></div><button className="md:col-span-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Publish Event</button></form></div><div className="flex overflow-x-auto gap-4 pb-4 snap-x">{dbEvents.map(ev => (<div key={ev.id} className={`min-w-[280px] max-w-[280px] snap-start shrink-0 rounded-xl border shadow-sm relative group transition-all duration-300 ${deletingIds.includes(ev.id) ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}><button onClick={() => setDeleteTarget({ id: ev.id, type: 'event' })} className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"><Trash2 size={14}/></button><div className="h-32 overflow-hidden rounded-lg mb-3 relative"><img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover"/>{ev.zoom_enabled && <div className="absolute bottom-2 right-2 bg-black/60 text-white p-1 rounded-md"><Eye size={12}/></div>}</div><div className="p-4"><h4 className="font-bold">{ev.title}</h4><p className="text-xs opacity-60">{ev.date} • {ev.loc}</p><div className={`mt-4 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}><span className="text-[10px] font-bold uppercase opacity-60">Total Joined</span><div className="flex items-center gap-2"><span className="flex items-center gap-1 font-black text-emerald-500"><Users size={14}/> {ev.participants || 0}</span><button onClick={() => fetchParticipants(ev.id)} className="text-[10px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded font-bold text-slate-600">View</button></div></div></div></div>))}</div></div>)}
+            {activeTab === 'events' && (<div><div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h4 className="font-bold mb-4">Create New Event</h4><form onSubmit={handleAddEvent} className="grid grid-cols-1 md:grid-cols-2 gap-4"><input value={eventForm.title} onChange={e=>setEventForm({...eventForm, title: e.target.value})} placeholder="Event Title" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><input value={eventForm.date} onChange={e=>setEventForm({...eventForm, date: e.target.value})} placeholder="Date (e.g 25 Dec 2025)" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><div className="md:col-span-2"><label className={`block text-xs font-bold mb-2 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cover Image</label><div className={`relative border-2 border-dashed rounded-xl h-48 overflow-hidden transition-colors ${isDark ? 'border-slate-700 hover:border-emerald-500' : 'border-slate-300 hover:border-emerald-500'}`}><input type="file" accept="image/*" onChange={(e)=>handleImageUpload(e, 'event')} className="hidden" id="fileUpload"/><label htmlFor="fileUpload" className="absolute inset-0 w-full h-full flex flex-col items-center justify-center cursor-pointer z-10">{eventForm.img ? (<div className="relative w-full h-full group"><img src={eventForm.img} className="w-full h-full object-cover" alt="Preview"/><div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><ImageIcon className="text-white mb-2" size={24}/><span className="text-white font-bold text-sm">Click to Change Image</span></div></div>) : (<div className="text-center"><div className="bg-emerald-500/10 p-3 rounded-full inline-block mb-3"><Upload className="text-emerald-500" size={24}/></div><span className={`block text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{uploading ? "Uploading..." : "Click Anywhere to Upload"}</span></div>)}</label></div></div><input value={eventForm.loc} onChange={e=>setEventForm({...eventForm, loc: e.target.value})} placeholder="Location" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 md:col-span-2 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><div className={`flex items-center justify-between p-3 border rounded-xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}><span className="text-sm font-bold opacity-70 flex items-center gap-2"><ImageIcon size={16}/> Allow Image Zoom?</span><button type="button" onClick={() => setEventForm({...eventForm, zoom_enabled: !eventForm.zoom_enabled})} className={`w-10 h-5 rounded-full relative transition-colors ${eventForm.zoom_enabled ? 'bg-emerald-500' : 'bg-slate-400'}`}><div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${eventForm.zoom_enabled ? 'left-6' : 'left-1'}`}></div></button></div><button className="md:col-span-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Publish Event</button></form></div><div className="flex overflow-x-auto gap-4 pb-4 snap-x">{dbEvents.map(ev => (<div key={ev.id} className={`min-w-[280px] max-w-[280px] snap-start shrink-0 rounded-xl border shadow-sm relative group transition-all duration-300 ${deletingIds.includes(ev.id) ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}><button onClick={() => setDeleteTarget({ id: ev.id, type: 'event' })} className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"><Trash2 size={14}/></button><div className="h-32 overflow-hidden rounded-lg mb-3 relative"><img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover"/>{ev.zoom_enabled && <div className="absolute bottom-2 right-2 bg-black/60 text-white p-1 rounded-md"><Eye size={12}/></div>}</div><div className="p-4"><h4 className="font-bold">{ev.title}</h4><p className="text-xs opacity-60">{ev.date} • {ev.loc}</p><div className={`mt-4 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}><span className="text-[10px] font-bold uppercase opacity-60">Total Joined</span><div className="flex items-center gap-2"><span className="flex items-center gap-1 font-black text-emerald-500"><Users size={14}/> {ev.participants || 0}</span><button onClick={() => fetchParticipants(ev.id)} className="text-[10px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded font-bold text-slate-600">View</button></div></div></div></div>))}</div></div>)}
             
             {/* --- ADMIN NEWS TAB (DENGAN LIST & DELETE) --- */}
             {activeTab === 'news' && (
@@ -560,7 +656,6 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <span className={`text-[10px] px-2 py-1 rounded font-bold ${isDark ? 'bg-slate-900 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>{n.date}</span>
-                        {/* DELETE BUTTON FOR NEWS */}
                         <button onClick={() => setDeleteTarget({ id: n.id, type: 'news' })} className="text-red-400 hover:text-red-500 p-1 rounded hover:bg-red-500/10 transition-colors">
                           <Trash2 size={14}/>
                         </button>
@@ -569,6 +664,50 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                   ))}
                 </div>
               </div>
+            )}
+            
+            {/* --- MERCHANDISE TAB (NEW) --- */}
+            {activeTab === 'merch' && (
+                <div>
+                    <div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-bold">Add New Product</h4>
+                            {/* SALES PROGRESS BAR */}
+                            <div className="w-1/3">
+                                <div className="flex justify-between text-[10px] mb-1 font-bold"><span className="text-emerald-500">Sales Progress</span><span>{totalSales} items sold</span></div>
+                                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-full rounded-full" style={{width: `${Math.min(totalSales, 100)}%`}}></div></div>
+                            </div>
+                        </div>
+                        <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input value={productForm.name} onChange={e=>setProductForm({...productForm, name: e.target.value})} placeholder="Product Name" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
+                            <input value={productForm.price} onChange={e=>setProductForm({...productForm, price: e.target.value})} placeholder="Price (e.g. RM 15 / 500 pts)" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/>
+                            <div className="md:col-span-2">
+                                <label className={`block text-xs font-bold mb-2 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Product Image</label>
+                                <div className={`relative border-2 border-dashed rounded-xl h-32 overflow-hidden transition-colors ${isDark ? 'border-slate-700 hover:border-emerald-500' : 'border-slate-300 hover:border-emerald-500'}`}>
+                                    <input type="file" accept="image/*" onChange={(e)=>handleImageUpload(e, 'product')} className="hidden" id="prodUpload"/>
+                                    <label htmlFor="prodUpload" className="absolute inset-0 w-full h-full flex flex-col items-center justify-center cursor-pointer z-10">
+                                        {productForm.img ? <img src={productForm.img} className="w-full h-full object-cover"/> : <div className="text-center text-xs opacity-50"><Upload size={20} className="mx-auto mb-1"/>Upload Photo</div>}
+                                    </label>
+                                </div>
+                            </div>
+                            <button className="md:col-span-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">List Item</button>
+                        </form>
+                    </div>
+                    {/* SHELF DISPLAY */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {dbProducts.map(p => (
+                            <div key={p.id} className={`relative group p-3 rounded-xl border flex flex-col transition-all ${deletingIds.includes(p.id) ? 'opacity-0 scale-95' : 'opacity-100'} ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                <button onClick={() => setDeleteTarget({ id: p.id, type: 'product' })} className="absolute top-2 right-2 z-10 bg-red-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"><Trash2 size={14}/></button>
+                                <div className="h-32 bg-slate-200 rounded-lg mb-3 overflow-hidden"><img src={p.img} className="w-full h-full object-cover"/></div>
+                                <h4 className="font-bold text-sm truncate">{p.name}</h4>
+                                <div className="flex justify-between items-center mt-auto pt-2">
+                                    <span className="text-xs opacity-60">{p.sold || 0} sold</span>
+                                    <span className="text-emerald-500 font-black text-sm">{p.price}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             )}
             </div>
         </main>
