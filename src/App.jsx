@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Guna HashRouter untuk elak 404 bila refresh di phone
+// Guna HashRouter supaya refresh di phone tak error 404
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { 
   Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
@@ -196,7 +196,7 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
     }
   };
 
-  // --- GLOBAL AUTO REFRESH (SEMUA HALAMAN AKAN SYNC) ---
+  // --- GLOBAL AUTO REFRESH (JANTUNG APLIKASI) ---
   useEffect(() => {
     refreshData();
     const interval = setInterval(() => { refreshData(); }, 2000); 
@@ -303,26 +303,20 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   const [deliveryMethod, setDeliveryMethod] = useState('Pickup');
   const [expandedImage, setExpandedImage] = useState(null);
   const [toast, setToast] = useState(null);
-  
-  // -- REWARD STATE --
   const [selectedReward, setSelectedReward] = useState(null);
 
   useEffect(() => { if (!currentUser) navigate('/login'); }, [currentUser, navigate]);
   if (!currentUser) return null;
 
-  // --- KIRA BAKI POINT (UPDATED) ---
   const myReqs = dbRequests.filter(r => r.student === currentUser.name && r.status === 'Approved');
   const totalEarned = myReqs.reduce((acc, curr) => acc + (curr.points || 0), 0);
-  
   const myRedemptions = dbRedemptions ? dbRedemptions.filter(r => r.student_name === currentUser.name) : [];
   const totalSpent = myRedemptions.reduce((acc, curr) => acc + (curr.cost || 0), 0);
-  
-  const totalPoints = totalEarned - totalSpent; // BAKI DALAM DOMPET
+  const totalPoints = totalEarned - totalSpent; 
   const fundProgress = Math.min((companyFund / fundGoal) * 100, 100);
   
   const handleLogout = () => { setCurrentUser(null); navigate('/'); };
   const toggleSelection = (id) => { if (selectedTypes.includes(id)) { if (selectedTypes.length > 1) setSelectedTypes(selectedTypes.filter(t => t !== id)); } else { setSelectedTypes([...selectedTypes, id]); } };
-  
   const triggerRedeem = (reward) => { setSelectedReward(reward); };
 
   const confirmRedeem = async (reward) => {
@@ -365,7 +359,6 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className="lg:col-span-2 bg-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[250px]"><div className="relative z-10"><div className="flex justify-between items-start"><div><p className="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-1">{t.calculator}</p><h2 className="text-4xl md:text-5xl font-black">{totalPoints} <span className="text-sm font-medium opacity-70">pts</span></h2></div><button onClick={() => setShowNewEntry(true)} className="bg-white text-emerald-800 px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-emerald-50 active:scale-95 transition-all flex items-center gap-1"><Plus size={14}/> {t.newEntry}</button></div>
-            {/* --- IMPACT SECTION GUNA totalEarned (Supaya tak kurang bila redeem) --- */}
             <div className="grid grid-cols-3 gap-2 md:gap-3 mt-6">
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><CloudRain className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.12).toFixed(1)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.co2}</p><p className="text-[8px] opacity-70 mt-1 italic">~{(totalEarned * 0.05).toFixed(1)} km driven</p></div>
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Zap className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.5).toFixed(0)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.energy}</p><p className="text-[8px] opacity-70 mt-1 italic">~{Math.floor(totalEarned/20)} hrs light</p></div>
