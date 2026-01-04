@@ -44,7 +44,7 @@ const VOTE_LOCATIONS = [
 // --- CUSTOM COMPONENTS ---
 
 const Toast = ({ message, type, onClose }) => {
-  useEffect(() => { const timer = setTimeout(onClose, 3000); return () => clearTimeout(timer); }, [onClose]);
+  useEffect(() => { const timer = setTimeout(onClose, 1500); return () => clearTimeout(timer); }, [onClose]);
   return (
     <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300 ${type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-600 text-white'}`}>
       {type === 'error' ? <XCircle size={20}/> : <CheckCircle size={20}/>}
