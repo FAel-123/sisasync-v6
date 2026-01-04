@@ -11,11 +11,35 @@ import {
   ShieldCheck, Key, TrendingUp, AlertCircle, Heart,
   Moon, Sun, Globe, Truck, Package, Menu, X, Eye, 
   Image as ImageIcon, Upload, FlaskConical, AlertTriangle,
-  QrCode, Copy, Check, ShoppingBag, Clock, Info, Star 
+  QrCode, Copy, Check, ShoppingBag, Clock, Info, Star,
+  Briefcase, Cpu, User, Anchor, CreditCard, Camera, Video, Mic, Wrench, Vote
 } from 'lucide-react';
 
 // IMPORT SUPABASE
 import { supabase } from './supabaseClient';
+
+// --- TEAM DATA ---
+const TEAM_MEMBERS = [
+  { role: "CEO", name: "ZAIM HAZIQ", title: "Chief Executive Officer", dept: "Top Management", icon: Briefcase, color: "bg-slate-500" },
+  { role: "CTO", name: "NURFAIL IZANI", title: "Chief Technology Officer", dept: "Technology Dept", icon: Cpu, color: "bg-blue-500" },
+  { role: "COO", name: "AHMAD IKMAL", title: "Chief Operating Officer", dept: "Operations & Logistics", icon: Truck, color: "bg-emerald-500" },
+  { role: "CFO & CMO", name: "PHANG JUN LIANG", title: "Finance & Marketing", dept: "Financial Dept", icon: TrendingUp, color: "bg-purple-500" },
+];
+
+// --- VOLUNTEER ROLES & LIMITS ---
+const VOLUNTEER_ROLES = [
+    { id: 'logistic', name: 'Logistics & Setup', icon: Wrench, color: 'bg-orange-500', limit: 5 },
+    { id: 'multimedia', name: 'Multimedia & Photo', icon: Camera, color: 'bg-purple-500', limit: 3 },
+    { id: 'protocol', name: 'Protocol & Emcee', icon: Mic, color: 'bg-blue-500', limit: 2 },
+    { id: 'promo', name: 'Promotion & Socials', icon: Megaphone, color: 'bg-pink-500', limit: 4 }
+];
+
+// --- VOTING LOCATIONS ---
+const VOTE_LOCATIONS = [
+    { id: 1, name: "Student Library (Foyer)", votes: 145, color: "bg-blue-500" },
+    { id: 2, name: "Sports Complex", votes: 89, color: "bg-orange-500" },
+    { id: 3, name: "Faculty of Engineering", votes: 210, color: "bg-emerald-500" }
+];
 
 // --- CUSTOM COMPONENTS ---
 
@@ -83,38 +107,102 @@ const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark })
     );
 };
 
-// --- ECO-CUBE MODAL ---
+// --- UPDATED VOLUNTEER MODAL (WITH LIMITS) ---
+const VolunteerModal = ({ isOpen, onClose, event, onConfirm, isDark }) => {
+    const [selectedRole, setSelectedRole] = useState(null);
+    const [roleCounts, setRoleCounts] = useState({});
+    const [loadingCounts, setLoadingCounts] = useState(true);
+
+    useEffect(() => {
+        if (isOpen && event) {
+            fetchCounts();
+        }
+    }, [isOpen, event]);
+
+    const fetchCounts = async () => {
+        setLoadingCounts(true);
+        const { data, error } = await supabase.from('event_volunteers').select('role').eq('event_id', event.id);
+        if (data) {
+            const counts = {};
+            data.forEach(item => { counts[item.role] = (counts[item.role] || 0) + 1; });
+            setRoleCounts(counts);
+        }
+        setLoadingCounts(false);
+    };
+
+    if (!isOpen || !event) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in px-4">
+            <div className={`w-full max-w-md p-6 rounded-3xl shadow-2xl relative ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
+                <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
+                <div className="mb-6"><h3 className="text-xl font-black mb-1">Volunteer Registration</h3><p className="text-xs opacity-60">Event: {event.title}</p></div>
+                <p className="text-sm font-bold mb-3">Available Positions:</p>
+                {loadingCounts ? <div className="text-center py-4"><Loader2 className="animate-spin mx-auto"/></div> : (
+                    <div className="grid grid-cols-1 gap-3 mb-6">
+                        {VOLUNTEER_ROLES.map(role => {
+                            const currentCount = roleCounts[role.name] || 0;
+                            const isFull = currentCount >= role.limit;
+                            return (
+                                <div key={role.id} onClick={() => !isFull && setSelectedRole(role.id)} className={`p-3 rounded-xl border-2 transition-all flex items-center justify-between gap-3 ${isFull ? 'opacity-50 cursor-not-allowed bg-slate-100 border-slate-200 grayscale' : 'cursor-pointer'} ${selectedRole === role.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : isDark ? 'border-slate-700 hover:bg-slate-800' : 'border-slate-100 hover:bg-slate-50'}`}>
+                                    <div className="flex items-center gap-3"><div className={`${role.color} p-2 rounded-full text-white shadow-sm`}><role.icon size={16}/></div><div><span className="text-xs font-bold block">{role.name}</span><span className={`text-[10px] font-bold ${isFull ? 'text-red-500' : 'text-emerald-600'}`}>{isFull ? "FULL" : `${role.limit - currentCount} slots left`}</span></div></div>
+                                    <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden"><div className={`h-full ${isFull ? 'bg-red-500' : 'bg-emerald-500'}`} style={{width: `${(currentCount / role.limit) * 100}%`}}></div></div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                <button disabled={!selectedRole} onClick={() => onConfirm(event.id, VOLUNTEER_ROLES.find(r => r.id === selectedRole).name)} className={`w-full py-3 font-bold rounded-xl shadow-lg transition-all ${selectedRole ? 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>Confirm Registration</button>
+            </div>
+        </div>
+    );
+};
+
+// --- MEMBERSHIP PAYMENT MODAL (FIXED) ---
+const MembershipPayModal = ({ isOpen, onClose, onSuccess, isDark }) => {
+    const [processing, setProcessing] = useState(false);
+    if (!isOpen) return null;
+
+    const handlePay = () => {
+        setProcessing(true);
+        setTimeout(() => {
+            setProcessing(false);
+            // GENERATE ID HERE (STATIC)
+            const generatedId = "UK" + Math.floor(100000 + Math.random() * 900000);
+            onSuccess(generatedId);
+        }, 1500);
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in px-4">
+            <div className={`w-full max-w-sm p-8 rounded-3xl shadow-2xl relative text-center ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
+                <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
+                <div className="w-16 h-16 bg-yellow-400 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg shadow-yellow-400/50 animate-bounce"><Star size={32} className="text-white fill-white"/></div>
+                <h3 className="text-2xl font-black mb-2">Upgrade to Member</h3>
+                <p className="text-sm opacity-60 mb-6">Unlock exclusive volunteering events and get a digital ID card.</p>
+                <div className={`p-4 rounded-xl mb-6 flex justify-between items-center ${isDark ? 'bg-slate-800' : 'bg-slate-50'}`}><span className="font-bold text-sm">Membership Fee</span><span className="font-black text-xl text-emerald-500">RM 10.00</span></div>
+                <button onClick={handlePay} disabled={processing} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">{processing ? <Loader2 className="animate-spin"/> : "Pay Now & Join"}</button>
+            </div>
+        </div>
+    );
+};
+
 const EcoCubeModal = ({ isOpen, onClose, isDark }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in px-4">
             <div className={`w-full max-w-lg p-6 rounded-3xl shadow-2xl relative ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
                 <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="bg-emerald-500 p-3 rounded-xl text-white shadow-lg"><Package size={24}/></div>
-                    <div><h3 className="text-2xl font-black">Eco-Cube</h3><p className="text-sm opacity-60">Toiletries Collection Service</p></div>
-                </div>
-                <div className={`p-4 rounded-xl mb-4 ${isDark ? 'bg-slate-800' : 'bg-emerald-50'}`}>
-                    <p className="text-sm leading-relaxed"><span className="font-bold text-emerald-500">What we collect:</span> Shampoo bottles, body wash containers, plastic tubes, and other bathroom plastics.</p>
-                </div>
+                <div className="flex items-center gap-3 mb-6"><div className="bg-emerald-500 p-3 rounded-xl text-white shadow-lg"><Package size={24}/></div><div><h3 className="text-2xl font-black">Eco-Cube</h3><p className="text-sm opacity-60">Toiletries Collection Service</p></div></div>
+                <div className={`p-4 rounded-xl mb-4 ${isDark ? 'bg-slate-800' : 'bg-emerald-50'}`}><p className="text-sm leading-relaxed"><span className="font-bold text-emerald-500">What we collect:</span> Shampoo bottles, body wash containers, plastic tubes, and other bathroom plastics.</p></div>
                 <h4 className="font-bold mb-3 flex items-center gap-2"><Clock size={16}/> Weekly Schedule</h4>
-                <div className={`rounded-xl border overflow-hidden mb-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                    <table className="w-full text-sm text-left">
-                        <thead className={isDark ? 'bg-slate-800' : 'bg-slate-50'}><tr><th className="p-3">Location</th><th className="p-3">Day</th><th className="p-3">Time</th></tr></thead>
-                        <tbody className="divide-y opacity-90">
-                            <tr><td className="p-3">Hostel Block A</td><td className="p-3">Mon & Thu</td><td className="p-3 font-bold text-emerald-500">5:00 PM</td></tr>
-                            <tr><td className="p-3">Hostel Block B</td><td className="p-3">Tue & Fri</td><td className="p-3 font-bold text-emerald-500">5:00 PM</td></tr>
-                            <tr><td className="p-3">Student Cafe</td><td className="p-3">Wednesday</td><td className="p-3 font-bold text-emerald-500">1:00 PM</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div className={`rounded-xl border overflow-hidden mb-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}><table className="w-full text-sm text-left"><thead className={isDark ? 'bg-slate-800' : 'bg-slate-50'}><tr><th className="p-3">Location</th><th className="p-3">Day</th><th className="p-3">Time</th></tr></thead><tbody className="divide-y opacity-90"><tr><td className="p-3">Hostel Block A</td><td className="p-3">Mon & Thu</td><td className="p-3 font-bold text-emerald-500">5:00 PM</td></tr><tr><td className="p-3">Hostel Block B</td><td className="p-3">Tue & Fri</td><td className="p-3 font-bold text-emerald-500">5:00 PM</td></tr><tr><td className="p-3">Student Cafe</td><td className="p-3">Wednesday</td><td className="p-3 font-bold text-emerald-500">1:00 PM</td></tr></tbody></table></div>
                 <button onClick={onClose} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg">Got it!</button>
             </div>
         </div>
     );
 };
 
-// --- SHOP MODAL ---
 const ShopModal = ({ isOpen, onClose, products, isDark }) => {
     const [purchasing, setPurchasing] = useState(null);
     if (!isOpen) return null;
@@ -183,6 +271,18 @@ const ParticipantsModal = ({ isOpen, onClose, participants, isDark }) => {
         </div>
     );
 };
+
+// --- TEAM CARD COMPONENT ---
+const TeamCard = ({ member, isDark }) => (
+    <div className={`w-40 md:w-48 p-4 rounded-2xl relative group hover:-translate-y-2 transition-all duration-300 flex flex-col items-center justify-center text-center z-10 ${isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white shadow-xl shadow-slate-200'}`}>
+        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center text-white text-xl mb-3 shadow-lg ${member.color}`}>
+            <member.icon size={24} />
+        </div>
+        <h3 className="text-sm font-bold mb-1 leading-tight">{member.name}</h3>
+        <p className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{member.role}</p>
+        <div className={`px-2 py-0.5 rounded-full text-[8px] font-bold truncate w-full ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{member.dept}</div>
+    </div>
+);
 
 const REWARDS_DATA = [
   { id: 'r1', name: "RM5 Voucher", cost: 500, icon: Gift },
@@ -279,8 +379,132 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
       <Route path="/login" element={<LoginPage {...props} />} />
       <Route path="/dashboard" element={<UserDashboard {...props} />} />
       <Route path="/admin-dashboard" element={<AdminDashboard {...props} fetchData={refreshData} />} />
+      <Route path="/member-zone" element={<MemberZone {...props} />} />
     </Routes>
   );
+}
+
+// --- MEMBER ZONE PAGE ---
+function MemberZone({ currentUser, dbEvents, isDark }) {
+    const navigate = useNavigate();
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [locations, setLocations] = useState(VOTE_LOCATIONS);
+    const [hasVoted, setHasVoted] = useState(false);
+
+    useEffect(() => {
+        if(!currentUser || !currentUser.isMember) navigate('/dashboard');
+    }, [currentUser, navigate]);
+
+    const handleVolunteer = async (eventId, role) => {
+        const { error } = await supabase.from('event_volunteers').insert([{
+            event_id: eventId,
+            student_name: currentUser.name,
+            role: role
+        }]);
+        if(!error) {
+            setToast({ message: "Registered as Volunteer!", type: "success" });
+            setSelectedEvent(null);
+        } else {
+            setToast({ message: "Error registering.", type: "error" });
+        }
+    };
+
+    const handleVote = (id) => {
+        if(hasVoted) return setToast({message: "You have already voted!", type: "error"});
+        const updated = locations.map(l => l.id === id ? {...l, votes: l.votes + 1} : l);
+        setLocations(updated);
+        setHasVoted(true);
+        setToast({message: "Vote cast successfully!", type: "success"});
+    };
+
+    const totalVotes = locations.reduce((acc, curr) => acc + curr.votes, 0);
+
+    return (
+        <div className={`min-h-screen font-sans pb-20 ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <VolunteerModal 
+                isOpen={!!selectedEvent} 
+                onClose={() => setSelectedEvent(null)} 
+                event={selectedEvent} 
+                onConfirm={handleVolunteer}
+                isDark={isDark}
+            />
+
+            <header className={`px-6 py-4 flex items-center justify-between border-b ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 font-bold text-sm"><ArrowLeft size={18}/> Back</button>
+                <div className="font-black text-emerald-500 flex items-center gap-2"><Star size={18} fill="currentColor"/> MEMBER ZONE</div>
+            </header>
+
+            <main className="max-w-4xl mx-auto p-6">
+                {/* DIGITAL ID CARD - FIXED ID */}
+                <div className="w-full max-w-md mx-auto aspect-[1.586/1] rounded-3xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 p-6 text-white shadow-2xl relative overflow-hidden mb-10 transform hover:scale-105 transition-transform duration-500">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    <div className="flex justify-between items-start mb-8 relative z-10">
+                        <div className="flex items-center gap-2">
+                            <BookOpen size={24}/>
+                            <span className="font-black tracking-widest text-lg">EDUCYCLE</span>
+                        </div>
+                        <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-bold border border-white/30">PREMIUM MEMBER</span>
+                    </div>
+                    <div className="mt-auto relative z-10">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-xs uppercase opacity-80 mb-1 tracking-wider">Member Name</p>
+                                <h2 className="text-2xl font-black tracking-wide text-shadow">{currentUser?.name?.toUpperCase()}</h2>
+                            </div>
+                            <QrCode size={48} className="opacity-80"/>
+                        </div>
+                        <p className="mt-4 text-xs font-mono opacity-70">ID: {currentUser?.memberId || "Generating..."}</p>
+                    </div>
+                </div>
+
+                {/* --- VOTING SECTION --- */}
+                <div className="mb-10">
+                    <h3 className="text-xl font-black mb-6 flex items-center gap-2"><Vote size={24} className="text-purple-500"/> Vote Next Location</h3>
+                    <div className={`p-6 rounded-2xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                        <p className="text-sm opacity-60 mb-4">Where should we place the next Eco-Cube? Cast your vote!</p>
+                        <div className="space-y-4">
+                            {locations.map(loc => {
+                                const percent = Math.round((loc.votes / totalVotes) * 100) || 0;
+                                return (
+                                    <div key={loc.id} onClick={() => handleVote(loc.id)} className={`relative overflow-hidden p-4 rounded-xl border-2 cursor-pointer transition-all ${hasVoted ? 'opacity-80 cursor-default' : 'hover:border-emerald-500'} ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
+                                        <div className={`absolute top-0 left-0 bottom-0 opacity-10 transition-all duration-1000 ${loc.color}`} style={{width: `${percent}%`}}></div>
+                                        <div className="relative flex justify-between items-center z-10">
+                                            <span className="font-bold">{loc.name}</span>
+                                            <span className="font-mono text-sm opacity-70">{percent}% ({loc.votes})</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* VOLUNTEER OPPORTUNITIES */}
+                <h3 className="text-xl font-black mb-6 flex items-center gap-2"><Hand size={24} className="text-blue-500"/> Volunteer Opportunities</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {dbEvents.map(ev => (
+                        <div key={ev.id} className={`p-5 rounded-2xl border transition-all hover:shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                            <div className="flex justify-between items-start mb-4">
+                                <h4 className="font-bold text-lg">{ev.title}</h4>
+                                <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>{ev.date}</span>
+                            </div>
+                            <p className="text-sm opacity-60 mb-4 flex items-center gap-2"><MapPin size={14}/> {ev.loc}</p>
+                            
+                            <div className="flex items-center justify-between mt-auto">
+                                <div className="flex -space-x-2">
+                                    {[1,2,3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-slate-300 border-2 border-white"></div>)}
+                                    <span className="text-[10px] pl-3 self-center opacity-60 font-bold">12 joined</span>
+                                </div>
+                                <button onClick={() => setSelectedEvent(ev)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95">Apply Volunteer</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </main>
+        </div>
+    );
 }
 
 const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding = false }) => {
@@ -295,21 +519,32 @@ const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding =
 // 1. LANDING PAGE
 function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
+  const scrollTo = (id) => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
+  
+  const ceo = TEAM_MEMBERS[0];
+  const subordinates = TEAM_MEMBERS.slice(1);
+
   return (
     <div className={`font-sans overflow-x-hidden ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
        <header className="relative h-screen flex flex-col items-center justify-center text-center px-4">
          <div className="absolute inset-0 z-0"><img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nature"/><div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div></div>
          <nav className="absolute top-0 w-full z-50 px-6 md:px-12 py-6 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-tight"><div className="bg-emerald-500 p-1.5 md:p-2 rounded-lg flex items-center justify-center"><BookOpen className="text-white w-4 h-4 md:w-6 md:h-6" /><Leaf className="text-emerald-900 w-3 h-3 md:w-4 md:h-4 -ml-1 md:-ml-2 mt-1" /></div> {t.heroTitle}</div>
-            <div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} isLanding={true} /><button onClick={() => navigate('/login')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-bold text-xs md:text-sm hover:bg-white hover:text-emerald-900 transition-all">{t.access}</button></div>
+            <div className="flex items-center gap-3">
+                <button onClick={() => scrollTo('team-section')} className="hidden md:block text-white text-sm font-bold opacity-80 hover:opacity-100 mr-4">Our Team</button>
+                <SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} isLanding={true} />
+                <button onClick={() => navigate('/login')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-bold text-xs md:text-sm hover:bg-white hover:text-emerald-900 transition-all">{t.access}</button>
+            </div>
          </nav>
          <div className="relative z-10 max-w-4xl space-y-4 md:space-y-6 animate-fade-in-up mt-10 px-4">
            <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-emerald-500/30 border border-emerald-400/50 rounded-full text-emerald-300 font-bold text-[10px] md:text-xs uppercase tracking-widest backdrop-blur-md"><Zap size={12}/> INITIATIVE</div>
            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-none">EDUCYCLE<span className="text-emerald-400">.</span></h1>
            <p className="text-lg md:text-2xl text-slate-200 max-w-2xl mx-auto font-light leading-relaxed">{t.heroDesc}</p>
-           <button onClick={() => document.getElementById('about-section').scrollIntoView({ behavior: 'smooth' })} className="mt-4 px-8 py-3 md:px-10 md:py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-lg shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-2 mx-auto">{t.explore} <ArrowRight /></button>
+           <button onClick={() => scrollTo('about-section')} className="mt-4 px-8 py-3 md:px-10 md:py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-lg shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-2 mx-auto">{t.explore} <ArrowRight /></button>
          </div>
        </header>
+       
+       {/* ABOUT SECTION */}
        <section id="about-section" className={`py-16 md:py-20 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
          <div className="max-w-full mx-auto px-6">
             <div className="mb-10 max-w-2xl"><h2 className="text-3xl md:text-4xl font-black mb-4">{t.aboutTitle}</h2><p className={`text-base md:text-lg leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.aboutDesc}</p></div>
@@ -319,6 +554,42 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
                 ))}
             </div>
          </div>
+       </section>
+
+       {/* --- NEW TEAM SECTION (TREE STRUCTURE) --- */}
+       <section id="team-section" className={`py-20 ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
+           <div className="max-w-6xl mx-auto px-6 text-center">
+               <h2 className="text-4xl font-black mb-12">Our Organization</h2>
+               
+               <div className="flex flex-col items-center">
+                   {/* LEVEL 1: CEO */}
+                   <div className="flex justify-center mb-4 relative z-10">
+                       <TeamCard member={ceo} isDark={isDark} />
+                   </div>
+
+                   {/* CONNECTOR LINES */}
+                   <div className="w-full max-w-2xl h-8 relative mb-4 hidden md:block">
+                        {/* Center Line Down from CEO */}
+                        <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        {/* Horizontal Line connecting branches */}
+                        <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        {/* Vertical Lines down to subordinates */}
+                        <div className={`absolute left-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                   </div>
+
+                   {/* LEVEL 2: DEPARTMENTS */}
+                   <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-12 w-full">
+                       {subordinates.map((m, idx) => (
+                           <div key={idx} className="flex flex-col items-center relative">
+                               {/* Mobile Connector */}
+                               <div className={`h-8 w-px mb-2 md:hidden ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                               <TeamCard member={m} isDark={isDark} />
+                           </div>
+                       ))}
+                   </div>
+               </div>
+           </div>
        </section>
     </div>
   );
@@ -366,8 +637,9 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   const navigate = useNavigate();
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
-  const [showEcoCube, setShowEcoCube] = useState(false); // NEW MODAL STATE
-  const [showShop, setShowShop] = useState(false); // NEW MODAL STATE
+  const [showEcoCube, setShowEcoCube] = useState(false); 
+  const [showShop, setShowShop] = useState(false); 
+  const [showMemberPay, setShowMemberPay] = useState(false); // NEW STATE FOR PAYMENT MODAL
   
   const [loading, setLoading] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState(['Plastic']);
@@ -415,6 +687,16 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
     if (!error) { setToast({message: "Request submitted!", type: "success"}); setShowNewEntry(false); fetchRequests(); } else { setToast({message: "Error submitting.", type: "error"}); }
     setLoading(false);
   };
+
+  // --- NEW: HANDLE MEMBERSHIP UPGRADE WITH FIXED ID ---
+  const handleUpgradeMember = (generatedId) => {
+      // Save ID to state and LocalStorage so it persists
+      const updatedUser = { ...currentUser, isMember: true, memberId: generatedId };
+      setCurrentUser(updatedUser); // Update Parent State & LocalStorage
+      setShowMemberPay(false);
+      navigate('/member-zone');
+  };
+
   const wasteOptions = [{ id: 'Plastic', icon: Coffee, color: 'text-blue-500 bg-blue-50', rate: 10 }, { id: 'Paper', icon: FileText, color: 'text-yellow-600 bg-yellow-50', rate: 5 }, { id: 'Tin', icon: Database, color: 'text-gray-600 bg-gray-50', rate: 15 }, { id: 'E-Waste', icon: Smartphone, color: 'text-purple-600 bg-purple-50', rate: 50 }];
   
   return (
@@ -426,6 +708,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       {/* NEW MODALS */}
       <EcoCubeModal isOpen={showEcoCube} onClose={() => setShowEcoCube(false)} isDark={isDark} />
       <ShopModal isOpen={showShop} onClose={() => setShowShop(false)} products={dbProducts} isDark={isDark} />
+      <MembershipPayModal isOpen={showMemberPay} onClose={() => setShowMemberPay(false)} onSuccess={handleUpgradeMember} isDark={isDark} />
 
       <header className={`sticky top-0 z-40 shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} border-b`}>
         <div className="bg-[#0f172a] text-white py-3 px-6 group relative overflow-hidden transition-all hover:bg-slate-900"><div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"></div><div className="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 relative z-10"><div className="flex items-center gap-3"><div className="bg-emerald-500/20 p-2 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform"><BarChart3 size={20} className="text-emerald-400"/></div><div><p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Phase 1 Funding</p><h3 className="font-black text-lg text-white leading-none">SEED ROUND</h3></div></div><div className="flex-1 w-full max-w-2xl flex items-center gap-2"><div className="flex-1"><div className="flex justify-between text-[10px] font-bold mb-1 px-1"><span className="text-emerald-300">RM {companyFund.toLocaleString()}</span><span className="text-slate-500">Goal: RM {fundGoal.toLocaleString()}</span></div><div className="w-full bg-slate-800 h-3 md:h-4 rounded-full overflow-hidden border border-slate-700 shadow-[0_0_10px_rgba(16,185,129,0.15)] relative"><div className="bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-500 h-full rounded-full transition-all duration-1000 relative flex items-center justify-end pr-2" style={{width: `${fundProgress}%`}}><div className="absolute inset-0 w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:15px_15px] opacity-30 animate-[pulse_2s_infinite]"></div></div></div></div><button onClick={() => setShowDonate(true)} className="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-lg">Donate</button></div><div className="hidden md:block"><span className="bg-emerald-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-lg group-hover:scale-100 transition-transform inline-block">{Math.floor(fundProgress)}%</span></div></div></div>
@@ -455,6 +738,15 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             <div onClick={() => setShowShop(true)} className={`p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-slate-200 hover:bg-orange-50 shadow-sm'}`}>
                 <div className="bg-orange-100 p-3 rounded-full"><ShoppingBag size={24} className="text-orange-600"/></div>
                 <div><span className="font-bold text-sm block">Recycle Shop</span><span className="text-[10px] opacity-60">Merchandise</span></div>
+            </div>
+            {/* --- MEMBERSHIP BUTTON (NEW) --- */}
+            <div onClick={() => currentUser.isMember ? navigate('/member-zone') : setShowMemberPay(true)} className={`col-span-2 p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 relative overflow-hidden group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+                <div className={`absolute right-0 top-0 bottom-0 w-2 ${currentUser.isMember ? 'bg-blue-500' : 'bg-yellow-400'}`}></div>
+                <div className={`${currentUser.isMember ? 'bg-blue-100 text-blue-600' : 'bg-yellow-100 text-yellow-600'} p-3 rounded-full`}><Star size={24}/></div>
+                <div>
+                    <span className="font-bold text-sm block flex items-center gap-2">Membership {currentUser.isMember && <span className="bg-blue-500 text-white text-[9px] px-2 rounded-full">ACTIVE</span>}</span>
+                    <span className="text-[10px] opacity-60">{currentUser.isMember ? "Enter Member Zone" : "Upgrade for RM10"}</span>
+                </div>
             </div>
         </div>
 
@@ -629,11 +921,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                 <div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} /><div className={`hidden md:flex px-4 py-2 rounded-full border font-bold text-sm items-center gap-2 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 text-slate-700'}`}><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Administrator</div></div>
             </div>
             <div className="">
-            {activeTab === 'overview' && (<div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Users</p><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Funding</p><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Sales</p><div className="flex items-center gap-4"><div className="p-3 bg-purple-100 text-purple-600 rounded-xl"><ShoppingBag size={24}/></div><h3 className="text-3xl font-black">{totalSales} <span className="text-sm font-medium opacity-50">items</span></h3></div></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h3 className="font-bold mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-emerald-500"/> Funding History</h3><div className="space-y-3"><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Seed Round A</span><span className="text-emerald-500 font-black">+RM 2,000</span></div><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Angel Investor</span><span className="text-emerald-500 font-black">+RM 1,250</span></div></div></div></div>)}
+            {activeTab === 'overview' && (<div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Users</p><div className="flex items-center gap-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Users size={24}/></div><h3 className="text-3xl font-black">{totalUsers}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Total Funding</p><div className="flex items-center gap-4"><div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Coins size={24}/></div><h3 className="text-3xl font-black">RM {companyFund}</h3></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex flex-col"><p className="text-[10px] font-bold uppercase opacity-60 mb-2">Pending Req</p><div className="flex items-center gap-4"><div className="p-3 bg-orange-100 text-orange-600 rounded-xl"><AlertCircle size={24}/></div><h3 className="text-3xl font-black">{pendingCount}</h3></div></div></div></div><div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h3 className="font-bold mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-emerald-500"/> Funding History</h3><div className="space-y-3"><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Seed Round A</span><span className="text-emerald-500 font-black">+RM 2,000</span></div><div className={`flex justify-between items-center p-3 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-50'}`}><span className="font-bold">Angel Investor</span><span className="text-emerald-500 font-black">+RM 1,250</span></div></div></div></div>)}
             {activeTab === 'requests' && (<div className={`rounded-2xl shadow-sm border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="overflow-x-auto"><table className="w-full text-left min-w-[600px]"><thead className={`text-xs uppercase ${isDark ? 'bg-slate-900 text-slate-400' : 'bg-slate-50 text-slate-400'}`}><tr><th className="p-4">Student</th><th className="p-4">Method</th><th className="p-4">Type</th><th className="p-4">Location</th><th className="p-4">Status</th><th className="p-4 text-right">Action</th></tr></thead><tbody className={`divide-y ${isDark ? 'divide-slate-700' : 'divide-slate-100'}`}>{dbRequests.map(req => (<tr key={req.id} className={`${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-50'} transition-colors`}><td className="p-4 font-bold">{req.student}</td><td className="p-4 text-sm opacity-80 flex items-center gap-2">{req.method === 'Drop-off' ? <Package size={14} className="text-purple-500"/> : <Truck size={14} className="text-blue-500"/>} {req.method || 'Pickup'}</td><td className="p-4 text-sm opacity-80">{req.type} ({req.weight})</td><td className="p-4 text-sm opacity-80">{req.location}</td><td className="p-4"><span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${req.status === 'Pending' ? 'bg-orange-100 text-orange-600' : req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>{req.status}</span></td><td className="p-4 text-right space-x-2 flex justify-end">{req.status === 'Pending' && (<><button onClick={() => handleStatus(req.id, 'Approved')} className="bg-emerald-500 text-white p-2 rounded-lg hover:bg-emerald-600"><CheckCircle size={16}/></button><button onClick={() => handleStatus(req.id, 'Rejected')} className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600"><XCircle size={16}/></button></>)}</td></tr>))}</tbody></table></div></div>)}
             {activeTab === 'events' && (<div><div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><h4 className="font-bold mb-4">Create New Event</h4><form onSubmit={handleAddEvent} className="grid grid-cols-1 md:grid-cols-2 gap-4"><input value={eventForm.title} onChange={e=>setEventForm({...eventForm, title: e.target.value})} placeholder="Event Title" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><input value={eventForm.date} onChange={e=>setEventForm({...eventForm, date: e.target.value})} placeholder="Date (e.g 25 Dec 2025)" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><div className="md:col-span-2"><label className={`block text-xs font-bold mb-2 uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cover Image</label><div className={`relative border-2 border-dashed rounded-xl h-48 overflow-hidden transition-colors ${isDark ? 'border-slate-700 hover:border-emerald-500' : 'border-slate-300 hover:border-emerald-500'}`}><input type="file" accept="image/*" onChange={(e)=>handleImageUpload(e, 'event')} className="hidden" id="fileUpload"/><label htmlFor="fileUpload" className="absolute inset-0 w-full h-full flex flex-col items-center justify-center cursor-pointer z-10">{eventForm.img ? (<div className="relative w-full h-full group"><img src={eventForm.img} className="w-full h-full object-cover" alt="Preview"/><div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><ImageIcon className="text-white mb-2" size={24}/><span className="text-white font-bold text-sm">Click to Change Image</span></div></div>) : (<div className="text-center"><div className="bg-emerald-500/10 p-3 rounded-full inline-block mb-3"><Upload className="text-emerald-500" size={24}/></div><span className={`block text-sm font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{uploading ? "Uploading..." : "Click Anywhere to Upload"}</span></div>)}</label></div></div><input value={eventForm.loc} onChange={e=>setEventForm({...eventForm, loc: e.target.value})} placeholder="Location" required className={`border p-3 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-emerald-500 md:col-span-2 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}/><div className={`flex items-center justify-between p-3 border rounded-xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}><span className="text-sm font-bold opacity-70 flex items-center gap-2"><ImageIcon size={16}/> Allow Image Zoom?</span><button type="button" onClick={() => setEventForm({...eventForm, zoom_enabled: !eventForm.zoom_enabled})} className={`w-10 h-5 rounded-full relative transition-colors ${eventForm.zoom_enabled ? 'bg-emerald-500' : 'bg-slate-400'}`}><div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-all ${eventForm.zoom_enabled ? 'left-6' : 'left-1'}`}></div></button></div><button className="md:col-span-2 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Publish Event</button></form></div><div className="flex overflow-x-auto gap-4 pb-4 snap-x">{dbEvents.map(ev => (<div key={ev.id} className={`min-w-[280px] max-w-[280px] snap-start shrink-0 rounded-xl border shadow-sm relative group transition-all duration-300 ${deletingIds.includes(ev.id) ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}><button onClick={() => setDeleteTarget({ id: ev.id, type: 'event' })} className="absolute top-2 right-2 z-10 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"><Trash2 size={14}/></button><div className="h-32 overflow-hidden rounded-lg mb-3 relative"><img src={ev.img || "https://images.unsplash.com/photo-1595278069441-2cf29f8005a4?q=80&w=800&auto=format&fit=crop"} className="w-full h-full object-cover"/>{ev.zoom_enabled && <div className="absolute bottom-2 right-2 bg-black/60 text-white p-1 rounded-md"><Eye size={12}/></div>}</div><div className="p-4"><h4 className="font-bold">{ev.title}</h4><p className="text-xs opacity-60">{ev.date} • {ev.loc}</p><div className={`mt-4 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}><span className="text-[10px] font-bold uppercase opacity-60">Total Joined</span><div className="flex items-center gap-2"><span className="flex items-center gap-1 font-black text-emerald-500"><Users size={14}/> {ev.participants || 0}</span><button onClick={() => fetchParticipants(ev.id)} className="text-[10px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded font-bold text-slate-600">View</button></div></div></div></div>))}</div></div>)}
-            
-            {/* --- ADMIN NEWS TAB (DENGAN LIST & DELETE) --- */}
             {activeTab === 'news' && (
               <div>
                 <div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -644,9 +934,6 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
                     <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Post Announcement</button>
                   </form>
                 </div>
-                
-                {/* LIST OF NEWS BELOW FORM */}
-                <h3 className="font-bold mb-4 flex items-center gap-2"><History size={18}/> Active Announcements</h3>
                 <div className="space-y-4">
                   {dbNews.length === 0 ? <p className="text-sm opacity-50 italic">No announcements posted.</p> : dbNews.map(n => (
                     <div key={n.id} className={`p-4 rounded-xl border shadow-sm flex justify-between items-start group relative ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} transition-all duration-300 ${deletingIds.includes(n.id) ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
