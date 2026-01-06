@@ -599,6 +599,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
 }
 
 // 2. LOGIN PAGE
+// 2. LOGIN PAGE (UPDATED)
 function LoginPage({ setCurrentUser, t, isDark }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -606,16 +607,41 @@ function LoginPage({ setCurrentUser, t, isDark }) {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+
   useEffect(() => { const saved = localStorage.getItem('educycle_user'); if (saved) navigate('/dashboard'); }, [navigate]);
+
   const handleLogin = (e) => {
     e.preventDefault(); setLoading(true);
     setTimeout(() => { setLoading(false); if (formData.email.includes('@') && formData.username) { setCurrentUser({ name: formData.username, email: formData.email, role: 'user' }); navigate('/dashboard'); } else { alert("Invalid credentials."); } }, 1000);
   };
-  const handleAdminUnlock = (e) => {
-    e.preventDefault();
-    if(adminPasscode === '1234') { setCurrentUser({ name: 'Administrator', email: 'admin@educycle.com', role: 'admin' }); navigate('/admin-dashboard'); } 
-    else { setIsShaking(true); setTimeout(() => setIsShaking(false), 300); setAdminPasscode(''); }
+
+  // --- NEW: AUTO-SUBMIT LOGIC ---
+  const handlePasscodeChange = (e) => {
+      // 1. Ambil value dan buang apa-apa yang bukan nombor
+      const val = e.target.value.replace(/\D/g, ''); 
+      
+      // 2. Limitkan kepada 4 digit sahaja
+      if (val.length > 4) return;
+
+      setAdminPasscode(val);
+
+      // 3. Jika cukup 4 digit, check terus
+      if (val.length === 4) {
+          if (val === '1234') {
+              // Kod Betul: Login terus
+              setCurrentUser({ name: 'Administrator', email: 'admin@educycle.com', role: 'admin' }); 
+              navigate('/admin-dashboard');
+          } else {
+              // Kod Salah: Shake dan reset
+              setIsShaking(true); 
+              setTimeout(() => { 
+                  setIsShaking(false); 
+                  setAdminPasscode(''); 
+              }, 500);
+          }
+      }
   };
+
   return (
     <div className={`min-h-screen flex flex-col lg:flex-row ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
        <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden"><img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=2670&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Login"/><div className="relative z-10 text-white p-12"><h1 className="text-6xl font-black mb-6">Join the<br/>Cycle.</h1><p className="text-xl text-slate-300">Staff & Students United for a Greener Future.</p></div></div>
@@ -630,7 +656,39 @@ function LoginPage({ setCurrentUser, t, isDark }) {
          </form>
          <div className="mt-8 flex justify-center"><button onClick={() => setShowAdminModal(true)} className="text-[10px] text-slate-400 font-bold uppercase tracking-widest hover:text-emerald-500 transition-colors flex items-center gap-1"><ShieldCheck size={12}/> {t.admin}</button></div>
        </div>
-       {showAdminModal && (<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in px-4"><div className={`bg-slate-900 w-full max-w-sm p-8 rounded-3xl shadow-2xl border border-slate-700 relative ${isShaking ? 'animate-shake' : ''}`}><button onClick={() => setShowAdminModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><XCircle/></button><div className="text-center mb-6"><div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700"><Lock size={32} className="text-emerald-500"/></div><h3 className="text-xl font-bold text-white">Security Clearance</h3><p className="text-xs text-slate-400 mt-1">Authorized Personnel Only</p></div><form onSubmit={handleAdminUnlock}><div className="mb-6"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block text-center">Enter Passcode</label><div className="relative"><Key className="absolute left-4 top-3.5 text-slate-500" size={18}/><input type="password" maxLength="4" autoFocus value={adminPasscode} onChange={(e) => setAdminPasscode(e.target.value)} placeholder="• • • •" className="w-full bg-slate-950 border border-slate-700 text-white text-center text-2xl tracking-[0.5em] rounded-xl p-3 font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-slate-700"/></div></div><button className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">Unlock Dashboard</button></form></div></div>)}
+       
+       {/* --- ADMIN MODAL UPDATE --- */}
+       {showAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in px-4">
+            <div className={`bg-slate-900 w-full max-w-sm p-8 rounded-3xl shadow-2xl border border-slate-700 relative ${isShaking ? 'animate-shake' : ''}`}>
+                <button onClick={() => setShowAdminModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><XCircle/></button>
+                <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700"><Lock size={32} className="text-emerald-500"/></div>
+                    <h3 className="text-xl font-bold text-white">Security Clearance</h3>
+                    <p className="text-xs text-slate-400 mt-1">Key in 4-digit PIN</p>
+                </div>
+                
+                {/* INPUT PIN YANG BARU */}
+                <div className="mb-6">
+                    <div className="relative">
+                        <Key className="absolute left-4 top-3.5 text-slate-500" size={18}/>
+                        <input 
+                            type="password" 
+                            inputMode="numeric" // Keyboard phone akan keluar nombor sahaja
+                            pattern="[0-9]*" 
+                            maxLength="4" 
+                            autoFocus 
+                            value={adminPasscode} 
+                            onChange={handlePasscodeChange} 
+                            placeholder="• • • •" 
+                            className="w-full bg-slate-950 border border-slate-700 text-white text-center text-2xl tracking-[0.5em] rounded-xl p-3 font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-slate-700"
+                        />
+                    </div>
+                </div>
+                <p className="text-center text-[10px] text-slate-500 uppercase tracking-widest">Auto-redirecting...</p>
+            </div>
+        </div>
+       )}
     </div>
   );
 }
@@ -789,17 +847,19 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
 }
 
 // 4. ADMIN DASHBOARD
+// 4. ADMIN DASHBOARD (UPDATED)
 function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbProducts, fetchData, companyFund, t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [eventForm, setEventForm] = useState({ title: '', date: '', loc: '', img: null, zoom_enabled: false });
-  
-  // -- NEW PRODUCT FORM STATE --
   const [productForm, setProductForm] = useState({ name: '', price: '', img: null });
 
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState(null);
+  
+  // State untuk Sidebar
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
   const [deleteTarget, setDeleteTarget] = useState(null); 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingIds, setDeletingIds] = useState([]);
@@ -831,10 +891,8 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
           let { error: uploadError } = await supabase.storage.from('images').upload(fileName, file);
           if (uploadError) throw uploadError;
           const { data } = supabase.storage.from('images').getPublicUrl(fileName);
-          
           if(type === 'event') setEventForm({ ...eventForm, img: data.publicUrl });
           else setProductForm({ ...productForm, img: data.publicUrl });
-
           setToast({message: "Image uploaded!", type: "success"});
       } catch (error) {
           setToast({message: "Upload failed: " + error.message, type: "error"});
@@ -859,7 +917,6 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
       e.target.reset(); 
   };
 
-  // -- NEW ADD PRODUCT FUNCTION --
   const handleAddProduct = async (e) => {
       e.preventDefault();
       if (!productForm.img) return setToast({message: "Please upload product image!", type: "error"});
@@ -873,11 +930,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
       if(!deleteTarget) return;
       setIsDeleting(true);
       setDeletingIds(prev => [...prev, deleteTarget.id]); 
-      
       let table = 'events';
       if(deleteTarget.type === 'news') table = 'news';
-      if(deleteTarget.type === 'product') table = 'products'; // HANDLE PRODUCT DELETE
-      
+      if(deleteTarget.type === 'product') table = 'products';
       setTimeout(async () => {
           const { error } = await supabase.from(table).delete().eq('id', deleteTarget.id);
           if(error) { setToast({message: "Delete failed!", type: "error"}); setDeletingIds(prev => prev.filter(id => id !== deleteTarget.id)); } 
@@ -889,42 +944,53 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
 
   const totalUsers = new Set(dbRequests.map(r => r.student)).size;
   const pendingCount = dbRequests.filter(r => r.status === 'Pending').length;
-  const totalSales = dbProducts.reduce((acc, curr) => acc + (curr.sold || 0), 0); // SALES STATS
+  const totalSales = dbProducts.reduce((acc, curr) => acc + (curr.sold || 0), 0);
 
   return (
     <div className={`min-h-screen flex font-sans ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         
-        <ConfirmModal 
-            isOpen={!!deleteTarget} 
-            onClose={() => setDeleteTarget(null)} 
-            onConfirm={confirmDelete} 
-            title="Delete Item?" 
-            message="This action cannot be undone." 
-            isDark={isDark} 
-        />
-        
+        <ConfirmModal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={confirmDelete} title="Delete Item?" message="This action cannot be undone." isDark={isDark} />
         <ParticipantsModal isOpen={!!viewParticipants} onClose={() => setViewParticipants(null)} participants={participantsList} isDark={isDark} />
         
-        {/* CHANGED z-20 to z-40 so overlay covers content */}
-        {isSidebarOpen && (<div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden animate-in fade-in" onClick={() => setIsSidebarOpen(false)}></div>)}
+        {/* OVERLAY GELAP UNTUK MOBILE */}
+        {isSidebarOpen && (<div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in" onClick={() => setIsSidebarOpen(false)}></div>)}
         
-        {/* CHANGED z-30 to z-50 so sidebar is ON TOP of everything on mobile */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isDark ? 'bg-slate-950 text-slate-400 border-r border-slate-800' : 'bg-slate-900 text-slate-400'} flex flex-col`}>
-            <div className="p-6 text-white font-black text-2xl flex items-center justify-between"><div className="flex items-center gap-2"><LayoutDashboard className="text-emerald-500"/> ADMIN</div><button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white"><X size={24}/></button></div>
+        {/* SIDEBAR ADMIN */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isDark ? 'bg-slate-950 text-slate-400 border-r border-slate-800' : 'bg-slate-900 text-slate-400'} flex flex-col shadow-2xl lg:shadow-none`}>
+            
+            <div className="p-6 text-white font-black text-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2"><LayoutDashboard className="text-emerald-500"/> ADMIN</div>
+                
+                {/* --- FIX: BUTANG TUTUP SIDEBAR (MOBILE) --- */}
+                {/* Butang ini hanya muncul pada screen kecil (lg:hidden) */}
+                <button 
+                    onClick={() => setIsSidebarOpen(false)} 
+                    className="lg:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-red-600 transition-colors shadow-lg border border-slate-700"
+                >
+                    <X size={20}/>
+                </button>
+                {/* ------------------------------------------ */}
+
+            </div>
+
             <nav className="flex-1 px-4 space-y-2">
                 <button onClick={() => { setActiveTab('overview'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'overview' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><BarChart3 size={18}/> Overview</button>
                 <button onClick={() => { setActiveTab('requests'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'requests' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><ShieldCheck size={18}/> Requests <span className="bg-red-500 text-white text-[10px] px-2 rounded-full ml-auto">{pendingCount}</span></button>
                 <button onClick={() => { setActiveTab('events'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'events' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><Calendar size={18}/> Manage Events</button>
                 <button onClick={() => { setActiveTab('news'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'news' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><Megaphone size={18}/> Announcements</button>
-                {/* NEW MERCHANDISE TAB */}
                 <button onClick={() => { setActiveTab('merch'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'merch' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><ShoppingBag size={18}/> Merchandise</button>
             </nav>
             <div className="p-4"><button onClick={() => navigate('/')} className="w-full flex items-center gap-2 p-3 text-red-400 font-bold hover:bg-slate-800 rounded-xl transition-all"><LogOut size={18}/> Logout</button></div>
         </aside>
+
         <main className={`flex-1 p-4 md:p-10 transition-all duration-300 lg:ml-64`}>
             <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-3"><button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"><Menu size={24}/></button><h2 className="text-2xl md:text-3xl font-black">{activeTab === 'overview' ? t.adminPanel : activeTab === 'requests' ? t.pickup : activeTab === 'events' ? t.manageEvents : activeTab === 'news' ? t.updates : 'Merchandise'}</h2></div>
+                <div className="flex items-center gap-3">
+                    {/* BUTANG BUKA MENU (MOBILE) */}
+                    <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg active:scale-95"><Menu size={24}/></button>
+                    <h2 className="text-2xl md:text-3xl font-black">{activeTab === 'overview' ? t.adminPanel : activeTab === 'requests' ? t.pickup : activeTab === 'events' ? t.manageEvents : activeTab === 'news' ? t.updates : 'Merchandise'}</h2>
+                </div>
                 <div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} /><div className={`hidden md:flex px-4 py-2 rounded-full border font-bold text-sm items-center gap-2 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 text-slate-700'}`}><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Administrator</div></div>
             </div>
             <div className="">
@@ -960,13 +1026,11 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
               </div>
             )}
             
-            {/* --- MERCHANDISE TAB (NEW) --- */}
             {activeTab === 'merch' && (
                 <div>
                     <div className={`p-6 rounded-2xl shadow-sm border mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="font-bold">Add New Product</h4>
-                            {/* SALES PROGRESS BAR */}
                             <div className="w-1/3">
                                 <div className="flex justify-between text-[10px] mb-1 font-bold"><span className="text-emerald-500">Sales Progress</span><span>{totalSales} items sold</span></div>
                                 <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-full rounded-full" style={{width: `${Math.min(totalSales, 100)}%`}}></div></div>
