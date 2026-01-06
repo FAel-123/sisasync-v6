@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // HashRouter: Fix 404 on refresh di phone
-import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+// Added 'Navigate' to imports to handle redirection
+import { HashRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { 
   Leaf, ArrowRight, ArrowLeft, LayoutDashboard, History, Gift, 
   LogOut, Plus, CheckCircle, XCircle, MapPin, Loader2, 
@@ -12,7 +13,7 @@ import {
   Moon, Sun, Globe, Truck, Package, Menu, X, Eye, 
   Image as ImageIcon, Upload, FlaskConical, AlertTriangle,
   QrCode, Copy, Check, ShoppingBag, Clock, Info, Star,
-  Briefcase, Cpu, User, Anchor, CreditCard, Camera, Video, Mic, Wrench, Vote
+  Briefcase, Cpu, User, Anchor, CreditCard, Camera, Video, Mic, Wrench, Vote, Home
 } from 'lucide-react';
 
 // IMPORT SUPABASE
@@ -52,6 +53,8 @@ const Toast = ({ message, type, onClose }) => {
     </div>
   );
 };
+
+// --- NOT FOUND PAGE REMOVED (Diganti dengan Redirect) ---
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, isDark }) => {
   if (!isOpen) return null;
@@ -107,7 +110,6 @@ const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark })
     );
 };
 
-// --- UPDATED VOLUNTEER MODAL (WITH LIMITS) ---
 const VolunteerModal = ({ isOpen, onClose, event, onConfirm, isDark }) => {
     const [selectedRole, setSelectedRole] = useState(null);
     const [roleCounts, setRoleCounts] = useState({});
@@ -121,7 +123,7 @@ const VolunteerModal = ({ isOpen, onClose, event, onConfirm, isDark }) => {
 
     const fetchCounts = async () => {
         setLoadingCounts(true);
-        const { data, error } = await supabase.from('event_volunteers').select('role').eq('event_id', event.id);
+        const { data } = await supabase.from('event_volunteers').select('role').eq('event_id', event.id);
         if (data) {
             const counts = {};
             data.forEach(item => { counts[item.role] = (counts[item.role] || 0) + 1; });
@@ -158,7 +160,6 @@ const VolunteerModal = ({ isOpen, onClose, event, onConfirm, isDark }) => {
     );
 };
 
-// --- MEMBERSHIP PAYMENT MODAL (FIXED) ---
 const MembershipPayModal = ({ isOpen, onClose, onSuccess, isDark }) => {
     const [processing, setProcessing] = useState(false);
     if (!isOpen) return null;
@@ -167,7 +168,6 @@ const MembershipPayModal = ({ isOpen, onClose, onSuccess, isDark }) => {
         setProcessing(true);
         setTimeout(() => {
             setProcessing(false);
-            // GENERATE ID HERE (STATIC)
             const generatedId = "UK" + Math.floor(100000 + Math.random() * 900000);
             onSuccess(generatedId);
         }, 1500);
@@ -380,6 +380,9 @@ function AppRoutes({ currentUser, setCurrentUser, language, setLanguage, isDark,
       <Route path="/dashboard" element={<UserDashboard {...props} />} />
       <Route path="/admin-dashboard" element={<AdminDashboard {...props} fetchData={refreshData} />} />
       <Route path="/member-zone" element={<MemberZone {...props} />} />
+      
+      {/* 404 REPLACEMENT: Auto Redirect to Home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
@@ -569,13 +572,13 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
 
                    {/* CONNECTOR LINES */}
                    <div className="w-full max-w-2xl h-8 relative mb-4 hidden md:block">
-                        {/* Center Line Down from CEO */}
-                        <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
-                        {/* Horizontal Line connecting branches */}
-                        <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
-                        {/* Vertical Lines down to subordinates */}
-                        <div className={`absolute left-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
-                        <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                       {/* Center Line Down from CEO */}
+                       <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                       {/* Horizontal Line connecting branches */}
+                       <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                       {/* Vertical Lines down to subordinates */}
+                       <div className={`absolute left-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                       <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                    </div>
 
                    {/* LEVEL 2: DEPARTMENTS */}
@@ -617,15 +620,15 @@ function LoginPage({ setCurrentUser, t, isDark }) {
     <div className={`min-h-screen flex flex-col lg:flex-row ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
        <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden"><img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=2670&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Login"/><div className="relative z-10 text-white p-12"><h1 className="text-6xl font-black mb-6">Join the<br/>Cycle.</h1><p className="text-xl text-slate-300">Staff & Students United for a Greener Future.</p></div></div>
        <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-24 py-12 relative h-screen">
-          <button onClick={() => navigate('/')} className={`absolute top-8 left-8 flex items-center gap-2 font-bold text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-800'}`}><ArrowLeft size={16}/> Back</button>
-          <div className="mb-8"><div className="flex items-center gap-2 font-black text-2xl text-emerald-600 mb-2"><BookOpen size={28}/> EDUCYCLE</div><h2 className="text-3xl md:text-4xl font-black">{t.access}</h2><p className="text-slate-500 mt-2 text-sm md:text-base">Enter your details to sync your contribution.</p></div>
-          <form onSubmit={handleLogin} className="space-y-4">
+         <button onClick={() => navigate('/')} className={`absolute top-8 left-8 flex items-center gap-2 font-bold text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-800'}`}><ArrowLeft size={16}/> Back</button>
+         <div className="mb-8"><div className="flex items-center gap-2 font-black text-2xl text-emerald-600 mb-2"><BookOpen size={28}/> EDUCYCLE</div><h2 className="text-3xl md:text-4xl font-black">{t.access}</h2><p className="text-slate-500 mt-2 text-sm md:text-base">Enter your details to sync your contribution.</p></div>
+         <form onSubmit={handleLogin} className="space-y-4">
              <div><label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Username</label><input type="text" required onChange={e => setFormData({...formData, username: e.target.value})} className={`w-full border rounded-xl p-3 md:p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}/></div>
              <div><label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email Address</label><input type="email" required onChange={e => setFormData({...formData, email: e.target.value})} className={`w-full border rounded-xl p-3 md:p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}/></div>
              <div><label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label><input type="password" required onChange={e => setFormData({...formData, password: e.target.value})} className={`w-full border rounded-xl p-3 md:p-4 font-bold outline-none focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}/></div>
              <button disabled={loading} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">{loading ? <Loader2 className="animate-spin"/> : "Secure Login"}</button>
-          </form>
-          <div className="mt-8 flex justify-center"><button onClick={() => setShowAdminModal(true)} className="text-[10px] text-slate-400 font-bold uppercase tracking-widest hover:text-emerald-500 transition-colors flex items-center gap-1"><ShieldCheck size={12}/> {t.admin}</button></div>
+         </form>
+         <div className="mt-8 flex justify-center"><button onClick={() => setShowAdminModal(true)} className="text-[10px] text-slate-400 font-bold uppercase tracking-widest hover:text-emerald-500 transition-colors flex items-center gap-1"><ShieldCheck size={12}/> {t.admin}</button></div>
        </div>
        {showAdminModal && (<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in px-4"><div className={`bg-slate-900 w-full max-w-sm p-8 rounded-3xl shadow-2xl border border-slate-700 relative ${isShaking ? 'animate-shake' : ''}`}><button onClick={() => setShowAdminModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><XCircle/></button><div className="text-center mb-6"><div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700"><Lock size={32} className="text-emerald-500"/></div><h3 className="text-xl font-bold text-white">Security Clearance</h3><p className="text-xs text-slate-400 mt-1">Authorized Personnel Only</p></div><form onSubmit={handleAdminUnlock}><div className="mb-6"><label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block text-center">Enter Passcode</label><div className="relative"><Key className="absolute left-4 top-3.5 text-slate-500" size={18}/><input type="password" maxLength="4" autoFocus value={adminPasscode} onChange={(e) => setAdminPasscode(e.target.value)} placeholder="• • • •" className="w-full bg-slate-950 border border-slate-700 text-white text-center text-2xl tracking-[0.5em] rounded-xl p-3 font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-slate-700"/></div></div><button className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">Unlock Dashboard</button></form></div></div>)}
     </div>
@@ -902,9 +905,13 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         />
         
         <ParticipantsModal isOpen={!!viewParticipants} onClose={() => setViewParticipants(null)} participants={participantsList} isDark={isDark} />
-        {isSidebarOpen && (<div className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm md:hidden animate-in fade-in" onClick={() => setIsSidebarOpen(false)}></div>)}
-        <aside className={`fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isDark ? 'bg-slate-950 text-slate-400 border-r border-slate-800' : 'bg-slate-900 text-slate-400'} flex flex-col`}>
-            <div className="p-6 text-white font-black text-2xl flex items-center justify-between"><div className="flex items-center gap-2"><LayoutDashboard className="text-emerald-500"/> ADMIN</div><button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white"><X size={24}/></button></div>
+        
+        {/* CHANGED z-20 to z-40 so overlay covers content */}
+        {isSidebarOpen && (<div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden animate-in fade-in" onClick={() => setIsSidebarOpen(false)}></div>)}
+        
+        {/* CHANGED z-30 to z-50 so sidebar is ON TOP of everything on mobile */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isDark ? 'bg-slate-950 text-slate-400 border-r border-slate-800' : 'bg-slate-900 text-slate-400'} flex flex-col`}>
+            <div className="p-6 text-white font-black text-2xl flex items-center justify-between"><div className="flex items-center gap-2"><LayoutDashboard className="text-emerald-500"/> ADMIN</div><button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white"><X size={24}/></button></div>
             <nav className="flex-1 px-4 space-y-2">
                 <button onClick={() => { setActiveTab('overview'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'overview' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><BarChart3 size={18}/> Overview</button>
                 <button onClick={() => { setActiveTab('requests'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'requests' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800'}`}><ShieldCheck size={18}/> Requests <span className="bg-red-500 text-white text-[10px] px-2 rounded-full ml-auto">{pendingCount}</span></button>
@@ -915,9 +922,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
             </nav>
             <div className="p-4"><button onClick={() => navigate('/')} className="w-full flex items-center gap-2 p-3 text-red-400 font-bold hover:bg-slate-800 rounded-xl transition-all"><LogOut size={18}/> Logout</button></div>
         </aside>
-        <main className={`flex-1 p-4 md:p-10 transition-all duration-300 md:ml-64`}>
+        <main className={`flex-1 p-4 md:p-10 transition-all duration-300 lg:ml-64`}>
             <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-3"><button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"><Menu size={24}/></button><h2 className="text-2xl md:text-3xl font-black">{activeTab === 'overview' ? t.adminPanel : activeTab === 'requests' ? t.pickup : activeTab === 'events' ? t.manageEvents : activeTab === 'news' ? t.updates : 'Merchandise'}</h2></div>
+                <div className="flex items-center gap-3"><button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"><Menu size={24}/></button><h2 className="text-2xl md:text-3xl font-black">{activeTab === 'overview' ? t.adminPanel : activeTab === 'requests' ? t.pickup : activeTab === 'events' ? t.manageEvents : activeTab === 'news' ? t.updates : 'Merchandise'}</h2></div>
                 <div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} /><div className={`hidden md:flex px-4 py-2 rounded-full border font-bold text-sm items-center gap-2 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 text-slate-700'}`}><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Administrator</div></div>
             </div>
             <div className="">
