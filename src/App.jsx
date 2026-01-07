@@ -520,6 +520,7 @@ const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding =
 };
 
 // 1. LANDING PAGE
+// 1. LANDING PAGE (UPDATED: No Initiative Badge & Clean Logo)
 function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const scrollTo = (id) => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
@@ -530,18 +531,40 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   return (
     <div className={`font-sans overflow-x-hidden ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
        <header className="relative h-screen flex flex-col items-center justify-center text-center px-4">
-         <div className="absolute inset-0 z-0"><img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nature"/><div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div></div>
+         {/* Background Image */}
+         <div className="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" className="w-full h-full object-cover" alt="Nature"/>
+            <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div>
+         </div>
+
+         {/* Navbar */}
          <nav className="absolute top-0 w-full z-50 px-6 md:px-12 py-6 flex justify-between items-center">
-            <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-tight"><div className="bg-emerald-500 p-1.5 md:p-2 rounded-lg flex items-center justify-center"><BookOpen className="text-white w-4 h-4 md:w-6 md:h-6" /><Leaf className="text-emerald-900 w-3 h-3 md:w-4 md:h-4 -ml-1 md:-ml-2 mt-1" /></div> {t.heroTitle}</div>
+            {/* LOGO DESIGN UPDATE: Clean Book Icon + Text */}
+            <div className="flex items-center gap-3 font-black text-xl md:text-2xl text-white tracking-wide">
+                <div className="bg-white/10 backdrop-blur-sm p-2 rounded-xl border border-white/20">
+                    <BookOpen className="text-emerald-400 w-5 h-5 md:w-6 md:h-6" />
+                </div> 
+                {/* Note: Jika nak guna gambar logo sebenar, uncomment bawah ni dan letak path gambar */}
+                {/* <img src="/path/to/your/logo.png" className="h-10" alt="Logo"/> */}
+                <span>EDUCYCLE</span>
+            </div>
+
             <div className="flex items-center gap-3">
                 <button onClick={() => scrollTo('team-section')} className="hidden md:block text-white text-sm font-bold opacity-80 hover:opacity-100 mr-4">Our Team</button>
                 <SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} isLanding={true} />
                 <button onClick={() => navigate('/login')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-bold text-xs md:text-sm hover:bg-white hover:text-emerald-900 transition-all">{t.access}</button>
             </div>
          </nav>
+
+         {/* Hero Content */}
          <div className="relative z-10 max-w-4xl space-y-4 md:space-y-6 animate-fade-in-up mt-10 px-4">
-           <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-emerald-500/30 border border-emerald-400/50 rounded-full text-emerald-300 font-bold text-[10px] md:text-xs uppercase tracking-widest backdrop-blur-md"><Zap size={12}/> INITIATIVE</div>
-           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-none">EDUCYCLE<span className="text-emerald-400">.</span></h1>
+           {/* --- REMOVED: INITIATIVE BADGE --- */}
+           
+           {/* LOGO TEXT DESIGN: Clean & Bold (Matches your image) */}
+           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-wide text-white leading-none drop-shadow-2xl">
+             EDUCYCLE
+           </h1>
+           
            <p className="text-lg md:text-2xl text-slate-200 max-w-2xl mx-auto font-light leading-relaxed">{t.heroDesc}</p>
            <button onClick={() => scrollTo('about-section')} className="mt-4 px-8 py-3 md:px-10 md:py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-lg shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-2 mx-auto">{t.explore} <ArrowRight /></button>
          </div>
@@ -572,20 +595,16 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
 
                    {/* CONNECTOR LINES */}
                    <div className="w-full max-w-2xl h-8 relative mb-4 hidden md:block">
-                       {/* Center Line Down from CEO */}
-                       <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
-                       {/* Horizontal Line connecting branches */}
-                       <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
-                       {/* Vertical Lines down to subordinates */}
-                       <div className={`absolute left-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
-                       <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        <div className={`absolute left-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                        <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                    </div>
 
                    {/* LEVEL 2: DEPARTMENTS */}
                    <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-12 w-full">
                        {subordinates.map((m, idx) => (
                            <div key={idx} className="flex flex-col items-center relative">
-                               {/* Mobile Connector */}
                                <div className={`h-8 w-px mb-2 md:hidden ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                                <TeamCard member={m} isDark={isDark} />
                            </div>
