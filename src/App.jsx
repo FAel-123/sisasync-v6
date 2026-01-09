@@ -51,7 +51,7 @@ const INITIAL_LOCATIONS = [
     { id: 3, name: "Faculty of Engineering", votes: 210, color: "bg-emerald-500" }
 ];
 
-// --- CUSTOM COMPONENTS ---
+// --- COMPONENTS ---
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => { const timer = setTimeout(onClose, 1500); return () => clearTimeout(timer); }, [onClose]);
@@ -556,7 +556,7 @@ const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding =
     );
 };
 
-// 1. LANDING PAGE (MOBILE STACK FIXED & PADDING ADJUSTED)
+// 1. LANDING PAGE (UPDATED: MOBILE TREE FIX (FLEX-WRAP))
 function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const scrollTo = (id) => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
@@ -571,7 +571,6 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
             <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div>
          </div>
          
-         {/* MOBILE FIX: ADDED pt-12 to prevent overlap */}
          <nav className="absolute top-0 w-full z-50 px-6 pt-12 md:pt-6 pb-4 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-wide">
                 <div className="bg-emerald-500/20 backdrop-blur-sm p-2 rounded-lg border border-emerald-500/50">
@@ -603,7 +602,6 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
          </div>
        </header>
        
-       {/* ABOUT SECTION */}
        <section id="about-section" className={`py-16 md:py-20 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
          <div className="max-w-full mx-auto px-6">
             <div className="mb-10 max-w-2xl"><h2 className="text-3xl md:text-4xl font-black mb-4">{t.aboutTitle}</h2><p className={`text-base md:text-lg leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.aboutDesc}</p></div>
@@ -615,18 +613,19 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
          </div>
        </section>
 
-       {/* --- NEW TEAM SECTION (TREE STRUCTURE - MOBILE STACK FIX) --- */}
+       {/* --- NEW TEAM SECTION (TREE STRUCTURE - MOBILE TREE FIX) --- */}
        <section id="team-section" className={`py-20 ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
            <div className="max-w-6xl mx-auto px-6 text-center">
                <h2 className="text-4xl font-black mb-12">Our Organization</h2>
                
                <div className="flex flex-col items-center">
                    {/* LEVEL 1: CEO */}
-                   <div className="flex flex-col items-center mb-0 md:mb-4 relative z-10">
+                   <div className="flex flex-col items-center mb-0 relative z-10">
                        <TeamCard member={ceo} isDark={isDark} />
-                        {/* MOBILE LINE UNDER CEO */}
-                       <div className="md:hidden h-8 w-1 bg-slate-200"></div>
                    </div>
+
+                   {/* VERTICAL LINE UNDER CEO (VISIBLE ON ALL SCREENS) */}
+                   <div className="h-8 w-px bg-slate-300"></div>
 
                    {/* CONNECTOR LINES (DESKTOP) */}
                    <div className="hidden md:block w-full max-w-2xl h-8 relative mb-4">
@@ -636,20 +635,14 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
                         <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                    </div>
 
-                   {/* LEVEL 2: DEPARTMENTS */}
-                   <div className="flex flex-col md:flex-row justify-center gap-0 md:gap-12 w-full">
+                   {/* LEVEL 2: DEPARTMENTS (MOBILE WRAP TO LOOK LIKE TREE) */}
+                   {/* flex-wrap: cards will wrap to next line, looking like a tree branch */}
+                   <div className="flex flex-wrap justify-center gap-8 md:gap-12 w-full">
                        {subordinates.map((m, idx) => (
                            <div key={idx} className="flex flex-col items-center relative">
-                               
-                               {/* MOBILE LINE BETWEEN CARDS (EXCEPT FIRST) */}
-                               {idx > 0 && <div className="md:hidden h-8 w-1 bg-slate-200"></div>}
-                               
-                               {/* DESKTOP TOP CONNECTOR */}
+                               {/* DESKTOP TOP CONNECTOR (ONLY ON MD+) */}
                                <div className="hidden md:block h-8 w-px mb-2 bg-slate-300"></div>
-
                                <TeamCard member={m} isDark={isDark} />
-                               {/* MOBILE LINE UNDER CARDS (EXCEPT LAST) */}
-                               {idx < subordinates.length - 1 && <div className="md:hidden h-8 w-1 bg-slate-200"></div>}
                            </div>
                        ))}
                    </div>
@@ -660,7 +653,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   );
 }
 
-// 2. LOGIN PAGE (UPDATED: AUTO UNLOCK)
+// 2. LOGIN PAGE
 function LoginPage({ setCurrentUser, t, isDark }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -676,28 +669,24 @@ function LoginPage({ setCurrentUser, t, isDark }) {
     setTimeout(() => { setLoading(false); if (formData.email.includes('@') && formData.username) { setCurrentUser({ name: formData.username, email: formData.email, role: 'user' }); navigate('/dashboard'); } else { alert("Invalid credentials."); } }, 1000);
   };
 
-  // --- AUTO-LOGIN FUNCTION ---
   const handlePasscodeChange = (e) => {
       const val = e.target.value;
       setAdminPasscode(val);
-      
-      // AUTO CHECK BILA CUKUP 4 DIGIT
       if (val.length === 4) {
           if (val === '1234') { 
               setCurrentUser({ name: 'Administrator', email: 'admin@educycle.com', role: 'admin' }); 
-              // Kita tutup modal dulu supaya tak nampak glitch, lepas tu navigate
               setShowAdminModal(false);
               setTimeout(() => navigate('/admin-dashboard'), 100);
           } else { 
               setIsShaking(true); 
-              setTimeout(() => { setIsShaking(false); setAdminPasscode(''); }, 300); // Clear lepas shake
+              setTimeout(() => { setIsShaking(false); setAdminPasscode(''); }, 300); 
           }
       }
   };
 
   return (
     <div className={`min-h-screen flex flex-col lg:flex-row ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
-       <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden"><img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=2670&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Login"/><div className="relative z-10 text-white p-12"><h1 className="text-6xl font-black mb-6">Join the<br/>Cycle.</h1><p className="text-xl text-slate-300">Staff & Students United for a Greener Future.</p></div></div>
+       <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden"><img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2574&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Login"/><div className="relative z-10 text-white p-12"><h1 className="text-6xl font-black mb-6">Join the<br/>Cycle.</h1><p className="text-xl text-slate-300">Staff & Students United for a Greener Future.</p></div></div>
        <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-24 py-12 relative h-screen">
           <button onClick={() => navigate('/')} className={`absolute top-8 left-8 flex items-center gap-2 font-bold text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-800'}`}><ArrowLeft size={16}/> Back</button>
           <div className="mb-8"><div className="flex items-center gap-2 font-black text-2xl text-emerald-600 mb-2"><BookOpen size={28}/> EDUCYCLE</div><h2 className="text-3xl md:text-4xl font-black">{t.access}</h2><p className="text-slate-500 mt-2 text-sm md:text-base">Enter your details to sync your contribution.</p></div>
@@ -710,7 +699,6 @@ function LoginPage({ setCurrentUser, t, isDark }) {
           <div className="mt-8 flex justify-center"><button onClick={() => setShowAdminModal(true)} className="text-[10px] text-slate-400 font-bold uppercase tracking-widest hover:text-emerald-500 transition-colors flex items-center gap-1"><ShieldCheck size={12}/> {t.admin}</button></div>
        </div>
        
-       {/* ADMIN MODAL WITH AUTO-UNLOCK */}
        {showAdminModal && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in px-4">
                <div className={`bg-slate-900 w-full max-w-sm p-8 rounded-3xl shadow-2xl border border-slate-700 relative ${isShaking ? 'animate-shake' : ''}`}>
@@ -729,7 +717,7 @@ function LoginPage({ setCurrentUser, t, isDark }) {
                                maxLength="4" 
                                autoFocus 
                                value={adminPasscode} 
-                               onChange={handlePasscodeChange} // CHANGED TO NEW HANDLER
+                               onChange={handlePasscodeChange}
                                placeholder="• • • •" 
                                className="w-full bg-slate-950 border border-slate-700 text-white text-center text-2xl tracking-[0.5em] rounded-xl p-3 font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-slate-700"
                            />
@@ -798,10 +786,9 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
     setLoading(false);
   };
 
-  // --- PERSISTENT MEMBERSHIP FIX ---
   const handleUpgradeMember = (generatedId) => {
       const updatedUser = { ...currentUser, isMember: true, memberId: generatedId };
-      setCurrentUser(updatedUser); // This calls handleSetUser in App, which saves to LocalStorage
+      setCurrentUser(updatedUser); 
       setShowMemberPay(false);
       navigate('/member-zone');
   };
@@ -826,7 +813,6 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className="lg:col-span-2 bg-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[250px]"><div className="relative z-10"><div className="flex justify-between items-start"><div><p className="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-1">{t.calculator}</p><h2 className="text-4xl md:text-5xl font-black">{totalPoints} <span className="text-sm font-medium opacity-70">pts</span></h2></div><button onClick={() => setShowNewEntry(true)} className="bg-white text-emerald-800 px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-emerald-50 active:scale-95 transition-all flex items-center gap-1"><Plus size={14}/> {t.newEntry}</button></div>
-            {/* --- IMPACT SECTION --- */}
             <div className="grid grid-cols-3 gap-2 md:gap-3 mt-6">
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><CloudRain className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.12).toFixed(1)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.co2}</p><p className="text-[8px] opacity-70 mt-1 italic">~{(totalEarned * 0.05).toFixed(1)} km driven</p></div>
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Zap className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.5).toFixed(0)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.energy}</p><p className="text-[8px] opacity-70 mt-1 italic">~{Math.floor(totalEarned/20)} hrs light</p></div>
@@ -834,11 +820,9 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             </div>
             </div><Leaf className="absolute -bottom-8 -right-8 text-emerald-500 w-48 h-48 opacity-20 rotate-12"/></div>
             
-            {/* --- REWARDS (KEMBALI DI SINI) --- */}
             <div className={`rounded-2xl p-5 border shadow-sm flex flex-col h-[250px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex justify-between items-center mb-4"><h3 className="font-bold flex items-center gap-2 text-sm"><Gift className="text-orange-500" size={18}/> {t.rewards}</h3><span className="text-xs font-bold opacity-60">{totalPoints} {t.available}</span></div><div className="flex-1 overflow-y-auto space-y-3 pr-1">{REWARDS_DATA.map(r => (<div key={r.id} onClick={() => triggerRedeem(r)} className={`flex items-center justify-between p-3 rounded-xl border transition-colors cursor-pointer group ${isDark ? 'bg-slate-700 border-slate-600 hover:border-emerald-500' : 'bg-slate-50 border-slate-100 hover:border-emerald-200 hover:bg-emerald-50'}`}><div className="flex items-center gap-3"><div className={`p-2 rounded-lg shadow-sm ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-600'} group-hover:text-emerald-500`}><r.icon size={16}/></div><div><p className="font-bold text-xs md:text-sm">{r.name}</p><p className="text-[10px] font-bold opacity-60">{r.cost} pts</p></div></div><ChevronRight size={16} className="opacity-40 group-hover:text-emerald-500 group-hover:opacity-100"/></div>))}</div></div>
         </div>
 
-        {/* --- EXTRA SERVICES ROW (BARU DI BAWAH) --- */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div onClick={() => setShowEcoCube(true)} className={`p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-slate-200 hover:bg-emerald-50 shadow-sm'}`}>
                 <div className="bg-emerald-100 p-3 rounded-full"><Package size={24} className="text-emerald-600"/></div>
@@ -848,7 +832,6 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
                 <div className="bg-orange-100 p-3 rounded-full"><ShoppingBag size={24} className="text-orange-600"/></div>
                 <div><span className="font-bold text-sm block">Recycle Shop</span><span className="text-[10px] opacity-60">Merchandise</span></div>
             </div>
-            {/* --- MEMBERSHIP BUTTON (NEW) --- */}
             <div onClick={() => currentUser.isMember ? navigate('/member-zone') : setShowMemberPay(true)} className={`col-span-2 p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 relative overflow-hidden group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
                 <div className={`absolute right-0 top-0 bottom-0 w-2 ${currentUser.isMember ? 'bg-blue-500' : 'bg-yellow-400'}`}></div>
                 <div className={`${currentUser.isMember ? 'bg-blue-100 text-blue-600' : 'bg-yellow-100 text-yellow-600'} p-3 rounded-full`}><Star size={24}/></div>
@@ -879,7 +862,6 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             )})}
         </div></div>
         
-        {/* LOGS & NEWS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2"><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><History size={16} className="text-purple-500"/> {t.logs}</h3><div className={`rounded-2xl p-4 border shadow-sm min-h-[300px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>{dbRequests.filter(r=>r.student === currentUser.name).length === 0 ? <p className="text-center opacity-50 py-20 text-xs">{t.noLogs}</p> : dbRequests.filter(r=>r.student === currentUser.name).map(req => (<div key={req.id} className={`flex justify-between items-center py-4 border-b last:border-0 transition-colors px-2 rounded-lg ${isDark ? 'border-slate-700 hover:bg-slate-700' : 'border-slate-50 hover:bg-slate-50'}`}><div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : req.status === 'Rejected' ? 'bg-red-100 text-red-500' : 'bg-orange-100 text-orange-500'}`}>{req.status === 'Approved' ? <CheckCircle size={18}/> : req.status === 'Rejected' ? <XCircle size={18}/> : <Loader2 size={18} className="animate-spin"/>}</div><div><p className="font-bold text-sm flex items-center gap-2">{req.type} {req.method === 'Drop-off' && <span className="bg-purple-100 text-purple-600 text-[9px] px-1 rounded">SELF</span>}</p><p className="text-[10px] opacity-60 font-medium">{req.date} • {req.weight} • {req.location}</p></div></div><div className="text-right"><span className="block font-black text-emerald-500 text-sm">+{req.points} pts</span><span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full ${req.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' : req.status === 'Rejected' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>{req.status}</span></div></div>))}</div></div>
             <div><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><Megaphone size={16} className="text-red-500"/> {t.updates}</h3><div className={`rounded-2xl p-5 border min-h-[300px] ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-blue-50 border-blue-100'}`}>{dbNews.map(n => (<div key={n.id} className={`mb-4 pb-4 border-b last:border-0 ${isDark ? 'border-slate-700' : 'border-blue-100'}`}><span className="bg-blue-200 text-blue-800 text-[9px] font-bold px-2 py-0.5 rounded mb-2 inline-block">{n.date}</span><p className={`font-bold text-sm mb-1 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{n.title}</p><p className={`text-[10px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-blue-600'}`}>{n.content}</p></div>))}</div></div>
@@ -894,7 +876,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   );
 }
 
-// 4. ADMIN DASHBOARD (UPDATED: SAFE ICONS & DATA CHECK & LOCAL TIME)
+// 4. ADMIN DASHBOARD (FIXED: TABLET/IPAD MENU BUTTON)
 function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbProducts, fetchData, companyFund, t, language, setLanguage, isDark, setIsDark, votingSession, setVotingSession }) {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
@@ -935,6 +917,7 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         const colors = ["bg-blue-500", "bg-orange-500", "bg-emerald-500", "bg-purple-500", "bg-pink-500"];
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
         const newLocObj = { id: newId, name: newLocation, votes: 0, color: randomColor };
+        
         setVotingSession({ ...votingSession, locations: [...votingSession.locations, newLocObj] });
         setNewLocation('');
         setToast({ message: "Location added!", type: "success" });
@@ -953,25 +936,22 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         }
     };
 
-    // --- SAFE DATA CALCULATION ---
+    // --- DATA CALCULATION ---
     const totalUsers = new Set(dbRequests.map(r => r.student)).size;
     const pendingCount = dbRequests.filter(r => r.status === 'Pending').length;
     const totalSales = dbProducts ? dbProducts.reduce((acc, curr) => acc + (curr.sold || 0), 0) : 0;
     
-    // 1. Calculate Waste Categories (Safe Check added)
     const categoryStats = { 'Plastic': 0, 'Paper': 0, 'Tin': 0, 'E-Waste': 0 };
     let totalWasteWeight = 0;
     dbRequests.filter(r => r.status === 'Approved').forEach(req => {
         const weight = parseFloat(req.weight) || 0;
         totalWasteWeight += weight;
-        // Check if req.type exists before calling includes
         if(req.type && req.type.includes('Plastic')) categoryStats['Plastic'] += weight;
         if(req.type && req.type.includes('Paper')) categoryStats['Paper'] += weight;
         if(req.type && req.type.includes('Tin')) categoryStats['Tin'] += weight;
         if(req.type && req.type.includes('E-Waste')) categoryStats['E-Waste'] += weight;
     });
     
-    // 2. Calculate Top Users
     const userLeaderboard = {};
     dbRequests.filter(r => r.status === 'Approved').forEach(req => {
         if(!userLeaderboard[req.student]) userLeaderboard[req.student] = { points: 0, weight: 0, count: 0 };
@@ -984,9 +964,11 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         .sort((a, b) => b.points - a.points)
         .slice(0, 5); 
 
-    // 3. Activity Trends (UPDATED: Use getLocalISOString to match dummy data exactly)
-    // IMPORTANT: This uses local date matching to ensure the graph is populated.
-    const last7Days = [...Array(7)].map((_, i) => getLocalISOString(i)).reverse();
+    const last7Days = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toLocaleDateString('en-CA');
+    }).reverse();
 
     const activityData = last7Days.map(date => {
         return { date, count: dbRequests.filter(r => r.date === date).length };
