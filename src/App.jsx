@@ -51,7 +51,16 @@ const INITIAL_LOCATIONS = [
     { id: 3, name: "Faculty of Engineering", votes: 210, color: "bg-emerald-500" }
 ];
 
-// --- COMPONENTS ---
+// --- REWARDS DATA (UPDATED LIST) ---
+const REWARDS_DATA = [
+  { id: 'r1', name: "Food Voucher RM5", cost: 500, icon: Coffee },
+  { id: 'r2', name: "Food Voucher RM10", cost: 1000, icon: Coffee },
+  { id: 'r3', name: "TnG Reload RM10", cost: 1200, icon: Smartphone },
+  { id: 'r4', name: "EduCycle T-Shirt", cost: 2500, icon: Smile },
+  { id: 'r5', name: "Vintage Canvas Tote", cost: 3000, icon: ShoppingBag },
+];
+
+// --- CUSTOM COMPONENTS ---
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => { const timer = setTimeout(onClose, 1500); return () => clearTimeout(timer); }, [onClose]);
@@ -106,7 +115,7 @@ const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark })
     );
 };
 
-// --- NEW NEWS MODAL FOR MOBILE ---
+// --- NEWS MODAL FOR MOBILE ---
 const NewsModal = ({ isOpen, onClose, news, isDark }) => {
     if (!isOpen) return null;
     return (
@@ -313,14 +322,6 @@ const TeamCard = ({ member, isDark }) => (
         <div className={`px-2 py-0.5 rounded-full text-[8px] font-bold truncate w-full ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{member.dept}</div>
     </div>
 );
-
-const REWARDS_DATA = [
-  { id: 'r1', name: "RM5 Voucher", cost: 500, icon: Gift },
-  { id: 'r2', name: "Notebook", cost: 1200, icon: BookOpen },
-  { id: 'r3', name: "Eco-Tee", cost: 2500, icon: Smile },
-  { id: 'r4', name: "Straw Kit", cost: 800, icon: Leaf },
-  { id: 'r5', name: "Movie Tix", cost: 1500, icon: Gift },
-];
 
 const LANG = {
   en: { heroTitle: "EDUCYCLE", heroDesc: "Transforming waste into education funds.", explore: "Explore Mission", access: "Login", welcome: "Hi,", dashboard: "Dashboard", calculator: "Eco-Impact", newEntry: "Recycle Now", co2: "CO2 Removed", energy: "Energy Saved", life: "Life Saved", rewards: "Rewards", available: "pts", events: "Events", join: "Join", joined: "Joined", logs: "History", updates: "News", noEvents: "No events.", noLogs: "No history.", redeemTitle: "Redeem", redeemConfirm: "Redeem reward", redeemSuccess: "SUCCESS!", locked: "LOCKED", needMore: "Need more points.", admin: "Admin", logout: "Logout", pickup: "Requests", manageEvents: "Events", postUpdate: "Update", adminPanel: "Admin Panel", selectMethod: "Delivery Method", methodPickup: "Pickup", methodDropoff: "Drop-off", fee: "Fee", bonus: "Bonus", aboutTitle: "Who We Are", aboutDesc: "We provide seamless pickup services and recyclables drop-off points across campus.", cat1: "Pickup Service", desc1: "Doorstep collection.", cat2: "Merchandise", desc2: "Eco-friendly products.", cat3: "Programs", desc3: "Community events.", cat4: "Green R&D", desc4: "Sustainable innovation." },
@@ -582,7 +583,7 @@ const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding =
     );
 };
 
-// 1. LANDING PAGE (MOBILE TREE FIX: FLEX-WRAP & LINES)
+// 1. LANDING PAGE (UPDATED: MOBILE TREE FIX (FLEX-WRAP))
 function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const scrollTo = (id) => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
@@ -597,7 +598,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
             <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div>
          </div>
          
-         {/* MOBILE FIX: ADDED pt-12 */}
+         {/* MOBILE FIX: ADDED pt-12 to prevent overlap */}
          <nav className="absolute top-0 w-full z-50 px-6 pt-12 md:pt-6 pb-4 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-wide">
                 <div className="bg-emerald-500/20 backdrop-blur-sm p-2 rounded-lg border border-emerald-500/50">
@@ -614,9 +615,18 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
          </nav>
 
          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center justify-center h-full text-center mt-0">
-           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none drop-shadow-2xl mb-6">EDUCYCLE</h1>
-           <p className="text-xl md:text-3xl text-slate-100 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">{t.heroDesc}</p>
-           <button onClick={() => scrollTo('about-section')} className="mt-10 px-8 py-4 md:px-10 md:py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-xl shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-3 mx-auto">{t.explore} <ArrowRight size={24}/></button>
+           
+           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none drop-shadow-2xl mb-6">
+             EDUCYCLE
+           </h1>
+           
+           <p className="text-xl md:text-3xl text-slate-100 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">
+                {t.heroDesc}
+           </p>
+           
+           <button onClick={() => scrollTo('about-section')} className="mt-10 px-8 py-4 md:px-10 md:py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-xl shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-3 mx-auto">
+                {t.explore} <ArrowRight size={24}/>
+           </button>
          </div>
        </header>
        
@@ -654,7 +664,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
                    </div>
 
                    {/* LEVEL 2: DEPARTMENTS (MOBILE WRAP) */}
-                   {/* flex-wrap = Susun sebelah-sebelah, kalau tak muat turun bawah */}
+                   {/* flex-wrap: cards will wrap to next line, looking like a tree branch */}
                    <div className="flex flex-wrap justify-center gap-8 md:gap-12 w-full relative">
                        
                        {/* MOBILE HORIZONTAL LINE FOR FIRST ROW ONLY */}
@@ -691,7 +701,28 @@ function LoginPage({ setCurrentUser, t, isDark }) {
 
   const handleLogin = (e) => {
     e.preventDefault(); setLoading(true);
-    setTimeout(() => { setLoading(false); if (formData.email.includes('@') && formData.username) { setCurrentUser({ name: formData.username, email: formData.email, role: 'user' }); navigate('/dashboard'); } else { alert("Invalid credentials."); } }, 1000);
+    setTimeout(() => { 
+        setLoading(false); 
+        if (formData.email.includes('@') && formData.username) { 
+            
+            // CHECK MEMBERSHIP STATUS FROM "DATABASE"
+            const membersDb = JSON.parse(localStorage.getItem('educycle_members_db') || '{}');
+            const memberData = membersDb[formData.email];
+
+            const userObj = { 
+                name: formData.username, 
+                email: formData.email, 
+                role: 'user',
+                isMember: memberData ? true : false,
+                memberId: memberData ? memberData.memberId : null
+            }; 
+            
+            setCurrentUser(userObj); 
+            navigate('/dashboard'); 
+        } else { 
+            alert("Invalid credentials."); 
+        } 
+    }, 1000);
   };
 
   // --- AUTO-LOGIN FUNCTION ---
@@ -839,7 +870,13 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   // --- PERSISTENT MEMBERSHIP FIX ---
   const handleUpgradeMember = (generatedId) => {
       const updatedUser = { ...currentUser, isMember: true, memberId: generatedId };
-      setCurrentUser(updatedUser); // This calls handleSetUser in App, which saves to LocalStorage
+      setCurrentUser(updatedUser);
+      
+      // SIMPAN DLM LOCALSTORAGE SUPAYA TAK HILANG BILA LOGOUT
+      const membersDb = JSON.parse(localStorage.getItem('educycle_members_db') || '{}');
+      membersDb[currentUser.email] = { isMember: true, memberId: generatedId };
+      localStorage.setItem('educycle_members_db', JSON.stringify(membersDb));
+
       setShowMemberPay(false);
       navigate('/member-zone');
   };
@@ -864,8 +901,8 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             <div className="flex items-center gap-2 text-emerald-500 font-black text-lg"><BookOpen size={20}/> EDUCYCLE</div>
             <div className="flex items-center gap-3">
                 
-                {/* --- NEW NOTIFICATION ICON IN HEADER --- */}
-                <button onClick={handleOpenNews} className="relative p-2 rounded-full hover:bg-black/5 transition-all">
+                {/* --- NEW NOTIFICATION ICON IN HEADER (MOBILE ONLY: md:hidden) --- */}
+                <button onClick={handleOpenNews} className="md:hidden relative p-2 rounded-full hover:bg-black/5 transition-all">
                     <Bell size={20} className={isDark ? 'text-slate-300' : 'text-slate-600'} />
                     {unreadCount > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>}
                 </button>
