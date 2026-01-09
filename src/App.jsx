@@ -556,7 +556,7 @@ const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding =
     );
 };
 
-// 1. LANDING PAGE (UPDATED: MOBILE NAV PADDING, TITLE SIZE, & BUTTON PADDING)
+// 1. LANDING PAGE (MOBILE STACK FIXED)
 function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const scrollTo = (id) => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
@@ -571,8 +571,8 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
             <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div>
          </div>
          
-         {/* MOBILE FIX: INCREASED pt-10 FOR STATUS BAR SAFETY */}
-         <nav className="absolute top-0 w-full z-50 px-6 pt-10 md:pt-8 pb-4 flex justify-between items-center">
+         {/* MOBILE FIX: ADDED pt-12 to prevent overlap */}
+         <nav className="absolute top-0 w-full z-50 px-6 pt-12 md:pt-6 pb-4 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-wide">
                 <div className="bg-emerald-500/20 backdrop-blur-sm p-2 rounded-lg border border-emerald-500/50">
                     <BookOpen className="text-emerald-400 w-5 h-5 md:w-6 md:h-6" strokeWidth={2.5} />
@@ -589,7 +589,6 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
 
          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center justify-center h-full text-center mt-0">
            
-           {/* DESKTOP TITLE: SMALLER THAN BEFORE BUT STILL GRAND */}
            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none drop-shadow-2xl mb-6">
              EDUCYCLE
            </h1>
@@ -598,7 +597,6 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
                 {t.heroDesc}
            </p>
            
-           {/* BUTTON SIZE: SLIGHTLY REDUCED PADDING */}
            <button onClick={() => scrollTo('about-section')} className="mt-10 px-8 py-4 md:px-10 md:py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-xl shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-3 mx-auto">
                 {t.explore} <ArrowRight size={24}/>
            </button>
@@ -617,31 +615,38 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
          </div>
        </section>
 
-       {/* --- NEW TEAM SECTION (TREE STRUCTURE) --- */}
+       {/* --- NEW TEAM SECTION (TREE STRUCTURE - MOBILE STACK FIX) --- */}
        <section id="team-section" className={`py-20 ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
            <div className="max-w-6xl mx-auto px-6 text-center">
                <h2 className="text-4xl font-black mb-12">Our Organization</h2>
                
                <div className="flex flex-col items-center">
                    {/* LEVEL 1: CEO */}
-                   <div className="flex justify-center mb-4 relative z-10">
+                   <div className="flex justify-center mb-0 md:mb-4 relative z-10">
                        <TeamCard member={ceo} isDark={isDark} />
                    </div>
 
-                   {/* CONNECTOR LINES */}
-                   <div className="w-full max-w-2xl h-8 relative mb-4 hidden md:block">
+                   {/* CONNECTOR LINES (DESKTOP) */}
+                   <div className="hidden md:block w-full max-w-2xl h-8 relative mb-4">
                         <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                         <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                         <div className={`absolute left-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                         <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                    </div>
 
+                   {/* MOBILE CONNECTOR LINE (CEO TO SUBORDINATES) */}
+                   <div className="md:hidden h-8 w-px bg-slate-300"></div>
+
                    {/* LEVEL 2: DEPARTMENTS */}
-                   <div className="flex flex-col md:flex-row justify-center gap-8 md:gap-12 w-full">
+                   <div className="flex flex-col md:flex-row justify-center gap-0 md:gap-12 w-full">
                        {subordinates.map((m, idx) => (
                            <div key={idx} className="flex flex-col items-center relative">
-                               {/* MOBILE CONNECTOR LINE */}
-                               <div className={`h-8 w-px mb-2 md:hidden ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                               {/* MOBILE LINE BETWEEN CARDS (EXCEPT FIRST) */}
+                               {idx > 0 && <div className="md:hidden h-8 w-px bg-slate-300"></div>}
+                               
+                               {/* DESKTOP TOP CONNECTOR */}
+                               <div className="hidden md:block h-8 w-px mb-2 bg-slate-300"></div>
+
                                <TeamCard member={m} isDark={isDark} />
                            </div>
                        ))}
