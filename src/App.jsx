@@ -12,7 +12,7 @@ import {
   Moon, Sun, Globe, Truck, Package, Menu, X, Eye, 
   Image as ImageIcon, Upload, FlaskConical, AlertTriangle,
   QrCode, Copy, Check, ShoppingBag, Clock, Info, Star,
-  Briefcase, Cpu, User, Anchor, CreditCard, Camera, Video, Mic, Wrench, Vote, Home, PieChart, Activity
+  Briefcase, Cpu, User, Anchor, CreditCard, Camera, Video, Mic, Wrench, Vote, Home, PieChart, Activity, Bell
 } from 'lucide-react';
 
 // IMPORT SUPABASE
@@ -101,6 +101,32 @@ const RedeemModal = ({ isOpen, onClose, reward, userPoints, onConfirm, isDark })
                 <div className="text-center mb-6 pt-4"><div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg ${canAfford ? 'bg-orange-100 text-orange-500' : 'bg-slate-100 text-slate-400'}`}><reward.icon size={40} className={canAfford ? 'animate-bounce' : ''} /></div><h3 className="text-xl font-black">{reward.name}</h3><p className="text-sm opacity-60 mt-1">Cost: <span className="font-bold">{reward.cost} pts</span></p></div>
                 {!canAfford && (<div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-center text-xs font-bold mb-4 flex items-center justify-center gap-2"><AlertCircle size={14}/> Insufficient points ({userPoints} pts)</div>)}
                 <div className="grid grid-cols-2 gap-3"><button onClick={onClose} className={`py-3 rounded-xl font-bold text-sm transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>Cancel</button><button onClick={handleConfirm} disabled={!canAfford || isProcessing} className={`py-3 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${!canAfford ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/30'}`}>{isProcessing ? <Loader2 className="animate-spin" size={18}/> : "Confirm Redeem"}</button></div>
+            </div>
+        </div>
+    );
+};
+
+// --- NEW NEWS MODAL FOR MOBILE ---
+const NewsModal = ({ isOpen, onClose, news, isDark }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 px-4">
+            <div className={`w-full max-w-md p-6 rounded-3xl shadow-2xl relative max-h-[80vh] flex flex-col ${isDark ? 'bg-slate-900 text-white border border-slate-700' : 'bg-white text-slate-900'}`}>
+                <button onClick={onClose} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X/></button>
+                <h3 className="text-xl font-black mb-4 flex items-center gap-2"><Megaphone className="text-red-500"/> Latest Updates</h3>
+                <div className="overflow-y-auto flex-1 pr-2">
+                    {news.length === 0 ? <p className="text-center py-10 opacity-50 italic">No updates available.</p> : (
+                        <div className="space-y-4">
+                            {news.map(n => (
+                                <div key={n.id} className={`p-4 rounded-xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                                    <span className="text-[10px] font-bold uppercase opacity-60 mb-1 block">{n.date}</span>
+                                    <h4 className="font-bold text-sm mb-1">{n.title}</h4>
+                                    <p className="text-xs opacity-70 leading-relaxed">{n.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -556,7 +582,7 @@ const SettingsToggles = ({ language, setLanguage, isDark, setIsDark, isLanding =
     );
 };
 
-// 1. LANDING PAGE (UPDATED: MOBILE TREE FIX (FLEX-WRAP))
+// 1. LANDING PAGE (MOBILE TREE FIX: FLEX-WRAP & LINES)
 function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   const navigate = useNavigate();
   const scrollTo = (id) => { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); };
@@ -571,6 +597,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
             <div className={`absolute inset-0 bg-gradient-to-b ${isDark ? 'from-black/90 via-black/60 to-slate-900' : 'from-black/70 via-black/40 to-slate-900'}`}></div>
          </div>
          
+         {/* MOBILE FIX: ADDED pt-12 */}
          <nav className="absolute top-0 w-full z-50 px-6 pt-12 md:pt-6 pb-4 flex justify-between items-center">
             <div className="flex items-center gap-2 font-black text-xl md:text-2xl text-white tracking-wide">
                 <div className="bg-emerald-500/20 backdrop-blur-sm p-2 rounded-lg border border-emerald-500/50">
@@ -587,18 +614,9 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
          </nav>
 
          <div className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center justify-center h-full text-center mt-0">
-           
-           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none drop-shadow-2xl mb-6">
-             EDUCYCLE
-           </h1>
-           
-           <p className="text-xl md:text-3xl text-slate-100 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">
-                {t.heroDesc}
-           </p>
-           
-           <button onClick={() => scrollTo('about-section')} className="mt-10 px-8 py-4 md:px-10 md:py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-xl shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-3 mx-auto">
-                {t.explore} <ArrowRight size={24}/>
-           </button>
+           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-white leading-none drop-shadow-2xl mb-6">EDUCYCLE</h1>
+           <p className="text-xl md:text-3xl text-slate-100 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">{t.heroDesc}</p>
+           <button onClick={() => scrollTo('about-section')} className="mt-10 px-8 py-4 md:px-10 md:py-5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-full text-sm md:text-xl shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center gap-3 mx-auto">{t.explore} <ArrowRight size={24}/></button>
          </div>
        </header>
        
@@ -613,7 +631,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
          </div>
        </section>
 
-       {/* --- NEW TEAM SECTION (TREE STRUCTURE - MOBILE TREE FIX) --- */}
+       {/* --- NEW TEAM SECTION (TREE STRUCTURE - MOBILE WRAP FIX) --- */}
        <section id="team-section" className={`py-20 ${isDark ? 'bg-slate-950' : 'bg-slate-100'}`}>
            <div className="max-w-6xl mx-auto px-6 text-center">
                <h2 className="text-4xl font-black mb-12">Our Organization</h2>
@@ -624,10 +642,10 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
                        <TeamCard member={ceo} isDark={isDark} />
                    </div>
 
-                   {/* VERTICAL LINE UNDER CEO (VISIBLE ON ALL SCREENS) */}
+                   {/* VERTICAL LINE UNDER CEO (ALL SCREENS) */}
                    <div className="h-8 w-px bg-slate-300"></div>
 
-                   {/* CONNECTOR LINES (DESKTOP) */}
+                   {/* CONNECTOR LINES (DESKTOP ONLY) */}
                    <div className="hidden md:block w-full max-w-2xl h-8 relative mb-4">
                         <div className={`absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                         <div className={`absolute left-[16%] right-[16%] top-1/2 h-px -translate-y-1/2 ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
@@ -635,13 +653,20 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
                         <div className={`absolute right-[16%] top-1/2 bottom-0 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                    </div>
 
-                   {/* LEVEL 2: DEPARTMENTS (MOBILE WRAP TO LOOK LIKE TREE) */}
-                   {/* flex-wrap: cards will wrap to next line, looking like a tree branch */}
-                   <div className="flex flex-wrap justify-center gap-8 md:gap-12 w-full">
+                   {/* LEVEL 2: DEPARTMENTS (MOBILE WRAP) */}
+                   {/* flex-wrap = Susun sebelah-sebelah, kalau tak muat turun bawah */}
+                   <div className="flex flex-wrap justify-center gap-8 md:gap-12 w-full relative">
+                       
+                       {/* MOBILE HORIZONTAL LINE FOR FIRST ROW ONLY */}
+                       <div className="md:hidden absolute top-0 left-[25%] right-[25%] h-px bg-slate-300 -translate-y-4"></div>
+
                        {subordinates.map((m, idx) => (
                            <div key={idx} className="flex flex-col items-center relative">
-                               {/* DESKTOP TOP CONNECTOR (ONLY ON MD+) */}
+                               {/* DESKTOP TOP CONNECTOR */}
                                <div className="hidden md:block h-8 w-px mb-2 bg-slate-300"></div>
+                               {/* MOBILE TOP CONNECTOR */}
+                               <div className="md:hidden h-4 w-px bg-slate-300 absolute -top-4"></div>
+
                                <TeamCard member={m} isDark={isDark} />
                            </div>
                        ))}
@@ -653,7 +678,7 @@ function LandingPage({ t, language, setLanguage, isDark, setIsDark }) {
   );
 }
 
-// 2. LOGIN PAGE
+// 2. LOGIN PAGE (UPDATED: AUTO UNLOCK)
 function LoginPage({ setCurrentUser, t, isDark }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -669,17 +694,21 @@ function LoginPage({ setCurrentUser, t, isDark }) {
     setTimeout(() => { setLoading(false); if (formData.email.includes('@') && formData.username) { setCurrentUser({ name: formData.username, email: formData.email, role: 'user' }); navigate('/dashboard'); } else { alert("Invalid credentials."); } }, 1000);
   };
 
+  // --- AUTO-LOGIN FUNCTION ---
   const handlePasscodeChange = (e) => {
       const val = e.target.value;
       setAdminPasscode(val);
+      
+      // AUTO CHECK BILA CUKUP 4 DIGIT
       if (val.length === 4) {
           if (val === '1234') { 
               setCurrentUser({ name: 'Administrator', email: 'admin@educycle.com', role: 'admin' }); 
+              // Kita tutup modal dulu supaya tak nampak glitch, lepas tu navigate
               setShowAdminModal(false);
               setTimeout(() => navigate('/admin-dashboard'), 100);
           } else { 
               setIsShaking(true); 
-              setTimeout(() => { setIsShaking(false); setAdminPasscode(''); }, 300); 
+              setTimeout(() => { setIsShaking(false); setAdminPasscode(''); }, 300); // Clear lepas shake
           }
       }
   };
@@ -699,6 +728,7 @@ function LoginPage({ setCurrentUser, t, isDark }) {
           <div className="mt-8 flex justify-center"><button onClick={() => setShowAdminModal(true)} className="text-[10px] text-slate-400 font-bold uppercase tracking-widest hover:text-emerald-500 transition-colors flex items-center gap-1"><ShieldCheck size={12}/> {t.admin}</button></div>
        </div>
        
+       {/* ADMIN MODAL WITH AUTO-UNLOCK */}
        {showAdminModal && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in px-4">
                <div className={`bg-slate-900 w-full max-w-sm p-8 rounded-3xl shadow-2xl border border-slate-700 relative ${isShaking ? 'animate-shake' : ''}`}>
@@ -717,7 +747,7 @@ function LoginPage({ setCurrentUser, t, isDark }) {
                                maxLength="4" 
                                autoFocus 
                                value={adminPasscode} 
-                               onChange={handlePasscodeChange}
+                               onChange={handlePasscodeChange} // CHANGED TO NEW HANDLER
                                placeholder="• • • •" 
                                className="w-full bg-slate-950 border border-slate-700 text-white text-center text-2xl tracking-[0.5em] rounded-xl p-3 font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-slate-700"
                            />
@@ -738,6 +768,8 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   const [showEcoCube, setShowEcoCube] = useState(false); 
   const [showShop, setShowShop] = useState(false); 
   const [showMemberPay, setShowMemberPay] = useState(false);
+  const [showNews, setShowNews] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   const [loading, setLoading] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState(['Plastic']);
@@ -748,6 +780,24 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
 
   useEffect(() => { if (!currentUser) navigate('/login'); }, [currentUser, navigate]);
   if (!currentUser) return null;
+
+  // --- NOTIFICATION BADGE LOGIC ---
+  useEffect(() => {
+    const lastReadId = parseInt(localStorage.getItem('last_read_news_id') || '0');
+    if (dbNews.length > 0 && dbNews[0].id > lastReadId) {
+        setUnreadCount(dbNews.filter(n => n.id > lastReadId).length);
+    } else {
+        setUnreadCount(0);
+    }
+  }, [dbNews]);
+
+  const handleOpenNews = () => {
+      setShowNews(true);
+      setUnreadCount(0);
+      if(dbNews.length > 0) {
+          localStorage.setItem('last_read_news_id', dbNews[0].id.toString());
+      }
+  };
 
   const myReqs = dbRequests.filter(r => r.student === currentUser.name && r.status === 'Approved');
   const totalEarned = myReqs.reduce((acc, curr) => acc + (curr.points || 0), 0);
@@ -786,9 +836,10 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
     setLoading(false);
   };
 
+  // --- PERSISTENT MEMBERSHIP FIX ---
   const handleUpgradeMember = (generatedId) => {
       const updatedUser = { ...currentUser, isMember: true, memberId: generatedId };
-      setCurrentUser(updatedUser); 
+      setCurrentUser(updatedUser); // This calls handleSetUser in App, which saves to LocalStorage
       setShowMemberPay(false);
       navigate('/member-zone');
   };
@@ -801,18 +852,34 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
       <DonateModal isOpen={showDonate} onClose={() => setShowDonate(false)} isDark={isDark} />
       <RedeemModal isOpen={!!selectedReward} onClose={() => setSelectedReward(null)} reward={selectedReward} userPoints={totalPoints} onConfirm={confirmRedeem} isDark={isDark} />
       
-      {/* ECO CUBE DYNAMIC LOCATIONS */}
+      {/* NEW MODALS */}
       <EcoCubeModal isOpen={showEcoCube} onClose={() => setShowEcoCube(false)} isDark={isDark} topLocations={winningLocations} />
       <ShopModal isOpen={showShop} onClose={() => setShowShop(false)} products={dbProducts} isDark={isDark} />
       <MembershipPayModal isOpen={showMemberPay} onClose={() => setShowMemberPay(false)} onSuccess={handleUpgradeMember} isDark={isDark} />
+      <NewsModal isOpen={showNews} onClose={() => setShowNews(false)} news={dbNews} isDark={isDark} />
 
       <header className={`sticky top-0 z-40 shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} border-b`}>
         <div className="bg-[#0f172a] text-white py-3 px-6 group relative overflow-hidden transition-all hover:bg-slate-900"><div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"></div><div className="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 relative z-10"><div className="flex items-center gap-3"><div className="bg-emerald-500/20 p-2 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform"><BarChart3 size={20} className="text-emerald-400"/></div><div><p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Phase 1 Funding</p><h3 className="font-black text-lg text-white leading-none">SEED ROUND</h3></div></div><div className="flex-1 w-full max-w-2xl flex items-center gap-2"><div className="flex-1"><div className="flex justify-between text-[10px] font-bold mb-1 px-1"><span className="text-emerald-300">RM {companyFund.toLocaleString()}</span><span className="text-slate-500">Goal: RM {fundGoal.toLocaleString()}</span></div><div className="w-full bg-slate-800 h-3 md:h-4 rounded-full overflow-hidden border border-slate-700 shadow-[0_0_10px_rgba(16,185,129,0.15)] relative"><div className="bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-500 h-full rounded-full transition-all duration-1000 relative flex items-center justify-end pr-2" style={{width: `${fundProgress}%`}}><div className="absolute inset-0 w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:15px_15px] opacity-30 animate-[pulse_2s_infinite]"></div></div></div></div><button onClick={() => setShowDonate(true)} className="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-lg">Donate</button></div><div className="hidden md:block"><span className="bg-emerald-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-lg group-hover:scale-100 transition-transform inline-block">{Math.floor(fundProgress)}%</span></div></div></div>
-        <div className={`px-6 py-3 flex justify-between items-center backdrop-blur-md ${isDark ? 'bg-slate-800/80' : 'bg-white/80'}`}><div className="flex items-center gap-2 text-emerald-500 font-black text-lg"><BookOpen size={20}/> EDUCYCLE</div><div className="flex items-center gap-3"><SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} /><div className="text-right hidden md:block"><p className="text-[10px] opacity-60 font-bold uppercase">{t.welcome}</p><p className="font-bold text-sm">{currentUser.name}</p></div><button onClick={handleLogout} className={`p-2 rounded-full transition-colors ${isDark ? 'bg-slate-700 hover:bg-red-900 text-slate-300' : 'bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-500'}`}><LogOut size={16}/></button></div></div>
+        <div className={`px-6 py-3 flex justify-between items-center backdrop-blur-md ${isDark ? 'bg-slate-800/80' : 'bg-white/80'}`}>
+            <div className="flex items-center gap-2 text-emerald-500 font-black text-lg"><BookOpen size={20}/> EDUCYCLE</div>
+            <div className="flex items-center gap-3">
+                
+                {/* --- NEW NOTIFICATION ICON IN HEADER --- */}
+                <button onClick={handleOpenNews} className="relative p-2 rounded-full hover:bg-black/5 transition-all">
+                    <Bell size={20} className={isDark ? 'text-slate-300' : 'text-slate-600'} />
+                    {unreadCount > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>}
+                </button>
+
+                <SettingsToggles language={language} setLanguage={setLanguage} isDark={isDark} setIsDark={setIsDark} />
+                <div className="text-right hidden md:block"><p className="text-[10px] opacity-60 font-bold uppercase">{t.welcome}</p><p className="font-bold text-sm">{currentUser.name}</p></div>
+                <button onClick={handleLogout} className={`p-2 rounded-full transition-colors ${isDark ? 'bg-slate-700 hover:bg-red-900 text-slate-300' : 'bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-500'}`}><LogOut size={16}/></button>
+            </div>
+        </div>
       </header>
       <main className="max-w-7xl mx-auto px-6 md:px-10 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
             <div className="lg:col-span-2 bg-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[250px]"><div className="relative z-10"><div className="flex justify-between items-start"><div><p className="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-1">{t.calculator}</p><h2 className="text-4xl md:text-5xl font-black">{totalPoints} <span className="text-sm font-medium opacity-70">pts</span></h2></div><button onClick={() => setShowNewEntry(true)} className="bg-white text-emerald-800 px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-emerald-50 active:scale-95 transition-all flex items-center gap-1"><Plus size={14}/> {t.newEntry}</button></div>
+            {/* --- IMPACT SECTION --- */}
             <div className="grid grid-cols-3 gap-2 md:gap-3 mt-6">
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><CloudRain className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.12).toFixed(1)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.co2}</p><p className="text-[8px] opacity-70 mt-1 italic">~{(totalEarned * 0.05).toFixed(1)} km driven</p></div>
                 <div className="bg-emerald-500/30 p-3 md:p-4 rounded-xl backdrop-blur-sm border border-emerald-400/20"><Zap className="mb-2 opacity-80" size={18}/><p className="text-xl md:text-2xl font-black">{(totalEarned * 0.5).toFixed(0)}</p><p className="text-[9px] md:text-[10px] opacity-90 leading-tight mt-1 font-medium">{t.energy}</p><p className="text-[8px] opacity-70 mt-1 italic">~{Math.floor(totalEarned/20)} hrs light</p></div>
@@ -820,9 +887,11 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             </div>
             </div><Leaf className="absolute -bottom-8 -right-8 text-emerald-500 w-48 h-48 opacity-20 rotate-12"/></div>
             
+            {/* --- REWARDS (KEMBALI DI SINI) --- */}
             <div className={`rounded-2xl p-5 border shadow-sm flex flex-col h-[250px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}><div className="flex justify-between items-center mb-4"><h3 className="font-bold flex items-center gap-2 text-sm"><Gift className="text-orange-500" size={18}/> {t.rewards}</h3><span className="text-xs font-bold opacity-60">{totalPoints} {t.available}</span></div><div className="flex-1 overflow-y-auto space-y-3 pr-1">{REWARDS_DATA.map(r => (<div key={r.id} onClick={() => triggerRedeem(r)} className={`flex items-center justify-between p-3 rounded-xl border transition-colors cursor-pointer group ${isDark ? 'bg-slate-700 border-slate-600 hover:border-emerald-500' : 'bg-slate-50 border-slate-100 hover:border-emerald-200 hover:bg-emerald-50'}`}><div className="flex items-center gap-3"><div className={`p-2 rounded-lg shadow-sm ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-600'} group-hover:text-emerald-500`}><r.icon size={16}/></div><div><p className="font-bold text-xs md:text-sm">{r.name}</p><p className="text-[10px] font-bold opacity-60">{r.cost} pts</p></div></div><ChevronRight size={16} className="opacity-40 group-hover:text-emerald-500 group-hover:opacity-100"/></div>))}</div></div>
         </div>
 
+        {/* --- EXTRA SERVICES ROW (BARU DI BAWAH) --- */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div onClick={() => setShowEcoCube(true)} className={`p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-slate-200 hover:bg-emerald-50 shadow-sm'}`}>
                 <div className="bg-emerald-100 p-3 rounded-full"><Package size={24} className="text-emerald-600"/></div>
@@ -832,6 +901,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
                 <div className="bg-orange-100 p-3 rounded-full"><ShoppingBag size={24} className="text-orange-600"/></div>
                 <div><span className="font-bold text-sm block">Recycle Shop</span><span className="text-[10px] opacity-60">Merchandise</span></div>
             </div>
+            {/* --- MEMBERSHIP BUTTON (NEW) --- */}
             <div onClick={() => currentUser.isMember ? navigate('/member-zone') : setShowMemberPay(true)} className={`col-span-2 p-4 rounded-xl border flex flex-row items-center gap-4 cursor-pointer transition-all hover:scale-95 relative overflow-hidden group ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
                 <div className={`absolute right-0 top-0 bottom-0 w-2 ${currentUser.isMember ? 'bg-blue-500' : 'bg-yellow-400'}`}></div>
                 <div className={`${currentUser.isMember ? 'bg-blue-100 text-blue-600' : 'bg-yellow-100 text-yellow-600'} p-3 rounded-full`}><Star size={24}/></div>
@@ -862,9 +932,12 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
             )})}
         </div></div>
         
+        {/* LOGS & NEWS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2"><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><History size={16} className="text-purple-500"/> {t.logs}</h3><div className={`rounded-2xl p-4 border shadow-sm min-h-[300px] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>{dbRequests.filter(r=>r.student === currentUser.name).length === 0 ? <p className="text-center opacity-50 py-20 text-xs">{t.noLogs}</p> : dbRequests.filter(r=>r.student === currentUser.name).map(req => (<div key={req.id} className={`flex justify-between items-center py-4 border-b last:border-0 transition-colors px-2 rounded-lg ${isDark ? 'border-slate-700 hover:bg-slate-700' : 'border-slate-50 hover:bg-slate-50'}`}><div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${req.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : req.status === 'Rejected' ? 'bg-red-100 text-red-500' : 'bg-orange-100 text-orange-500'}`}>{req.status === 'Approved' ? <CheckCircle size={18}/> : req.status === 'Rejected' ? <XCircle size={18}/> : <Loader2 size={18} className="animate-spin"/>}</div><div><p className="font-bold text-sm flex items-center gap-2">{req.type} {req.method === 'Drop-off' && <span className="bg-purple-100 text-purple-600 text-[9px] px-1 rounded">SELF</span>}</p><p className="text-[10px] opacity-60 font-medium">{req.date} • {req.weight} • {req.location}</p></div></div><div className="text-right"><span className="block font-black text-emerald-500 text-sm">+{req.points} pts</span><span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full ${req.status === 'Approved' ? 'bg-emerald-50 text-emerald-600' : req.status === 'Rejected' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>{req.status}</span></div></div>))}</div></div>
-            <div><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><Megaphone size={16} className="text-red-500"/> {t.updates}</h3><div className={`rounded-2xl p-5 border min-h-[300px] ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-blue-50 border-blue-100'}`}>{dbNews.map(n => (<div key={n.id} className={`mb-4 pb-4 border-b last:border-0 ${isDark ? 'border-slate-700' : 'border-blue-100'}`}><span className="bg-blue-200 text-blue-800 text-[9px] font-bold px-2 py-0.5 rounded mb-2 inline-block">{n.date}</span><p className={`font-bold text-sm mb-1 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{n.title}</p><p className={`text-[10px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-blue-600'}`}>{n.content}</p></div>))}</div></div>
+            
+            {/* UPDATED: HIDE NEWS ON MOBILE (MD:BLOCK) */}
+            <div className="hidden md:block"><h3 className="font-bold mb-3 flex items-center gap-2 text-sm"><Megaphone size={16} className="text-red-500"/> {t.updates}</h3><div className={`rounded-2xl p-5 border min-h-[300px] ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-blue-50 border-blue-100'}`}>{dbNews.map(n => (<div key={n.id} className={`mb-4 pb-4 border-b last:border-0 ${isDark ? 'border-slate-700' : 'border-blue-100'}`}><span className="bg-blue-200 text-blue-800 text-[9px] font-bold px-2 py-0.5 rounded mb-2 inline-block">{n.date}</span><p className={`font-bold text-sm mb-1 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{n.title}</p><p className={`text-[10px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-blue-600'}`}>{n.content}</p></div>))}</div></div>
         </div>
       </main>
       
@@ -876,7 +949,7 @@ function UserDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNe
   );
 }
 
-// 4. ADMIN DASHBOARD (FIXED: TABLET/IPAD MENU BUTTON)
+// 4. ADMIN DASHBOARD (UPDATED: SAFE ICONS & DATA CHECK & LOCAL TIME)
 function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbNews, dbProducts, fetchData, companyFund, t, language, setLanguage, isDark, setIsDark, votingSession, setVotingSession }) {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
@@ -917,7 +990,6 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         const colors = ["bg-blue-500", "bg-orange-500", "bg-emerald-500", "bg-purple-500", "bg-pink-500"];
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
         const newLocObj = { id: newId, name: newLocation, votes: 0, color: randomColor };
-        
         setVotingSession({ ...votingSession, locations: [...votingSession.locations, newLocObj] });
         setNewLocation('');
         setToast({ message: "Location added!", type: "success" });
@@ -936,22 +1008,25 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         }
     };
 
-    // --- DATA CALCULATION ---
+    // --- SAFE DATA CALCULATION ---
     const totalUsers = new Set(dbRequests.map(r => r.student)).size;
     const pendingCount = dbRequests.filter(r => r.status === 'Pending').length;
     const totalSales = dbProducts ? dbProducts.reduce((acc, curr) => acc + (curr.sold || 0), 0) : 0;
     
+    // 1. Calculate Waste Categories (Safe Check added)
     const categoryStats = { 'Plastic': 0, 'Paper': 0, 'Tin': 0, 'E-Waste': 0 };
     let totalWasteWeight = 0;
     dbRequests.filter(r => r.status === 'Approved').forEach(req => {
         const weight = parseFloat(req.weight) || 0;
         totalWasteWeight += weight;
+        // Check if req.type exists before calling includes
         if(req.type && req.type.includes('Plastic')) categoryStats['Plastic'] += weight;
         if(req.type && req.type.includes('Paper')) categoryStats['Paper'] += weight;
         if(req.type && req.type.includes('Tin')) categoryStats['Tin'] += weight;
         if(req.type && req.type.includes('E-Waste')) categoryStats['E-Waste'] += weight;
     });
     
+    // 2. Calculate Top Users
     const userLeaderboard = {};
     dbRequests.filter(r => r.status === 'Approved').forEach(req => {
         if(!userLeaderboard[req.student]) userLeaderboard[req.student] = { points: 0, weight: 0, count: 0 };
@@ -964,11 +1039,9 @@ function AdminDashboard({ currentUser, setCurrentUser, dbRequests, dbEvents, dbN
         .sort((a, b) => b.points - a.points)
         .slice(0, 5); 
 
-    const last7Days = [...Array(7)].map((_, i) => {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        return d.toLocaleDateString('en-CA');
-    }).reverse();
+    // 3. Activity Trends (UPDATED: Use getLocalISOString to match dummy data exactly)
+    // IMPORTANT: This uses local date matching to ensure the graph is populated.
+    const last7Days = [...Array(7)].map((_, i) => getLocalISOString(i)).reverse();
 
     const activityData = last7Days.map(date => {
         return { date, count: dbRequests.filter(r => r.date === date).length };
